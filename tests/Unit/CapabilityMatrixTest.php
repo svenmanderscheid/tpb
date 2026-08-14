@@ -24,6 +24,7 @@ final class CapabilityMatrixTest extends TestCase
             'tpb_reprint_labels'    => ['owner', 'admin', 'production'],
             'tpb_view_audit'        => ['owner'],
             'tpb_manage_users'      => ['owner'],
+            'tpb_manage_finance'    => ['owner', 'finance'],
         ];
     }
 

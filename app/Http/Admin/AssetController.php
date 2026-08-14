@@ -25,6 +25,7 @@ final class AssetController
 
         Response::html(View::render('admin/assets', [
             'title'  => 'Assets',
+            'nav'    => 'assets',
             'assets' => $assets,
             'flash'  => $flash,
         ]));

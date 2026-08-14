@@ -20,6 +20,7 @@ final class DashboardController
     {
         Response::html(View::render('admin/dashboard', [
             'title'       => 'Dashboard',
+            'nav'         => 'dashboard',
             'displayName' => Auth::displayName() ?? 'Benutzer',
             'role'        => Auth::role() ?? '',
         ]));

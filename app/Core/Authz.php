@@ -22,6 +22,8 @@ final class Authz
         'tpb_reprint_labels'    => ['owner', 'admin', 'production'],
         'tpb_view_audit'        => ['owner'],
         'tpb_manage_users'      => ['owner'],
+        // Finanzmodul (Abweichung, siehe docs/DECISIONS.md #16)
+        'tpb_manage_finance'    => ['owner', 'finance'],
     ];
 
     public static function roleHas(string $role, string $capability): bool

@@ -3,9 +3,11 @@
 /** @var string $title */
 
 use Tpb\Core\Auth;
+use Tpb\Core\Authz;
 use Tpb\Core\Csrf;
 
 $pageTitle = isset($title) ? (string) $title : 'Admin';
+$activeNav = $nav ?? '';
 ?><!doctype html>
 <html lang="de">
 <head>
@@ -17,6 +19,15 @@ $pageTitle = isset($title) ? (string) $title : 'Admin';
 <body>
     <header class="topbar">
         <div class="brand">The Printing Brothers</div>
+        <nav class="mainnav">
+            <a href="/admin" class="<?= $activeNav === 'dashboard' ? 'active' : '' ?>">Dashboard</a>
+            <?php if (Authz::can('tpb_manage_artwork')): ?>
+                <a href="/admin/assets" class="<?= $activeNav === 'assets' ? 'active' : '' ?>">Assets</a>
+            <?php endif; ?>
+            <?php if (Authz::can('tpb_view_costs')): ?>
+                <a href="/admin/finanzen" class="<?= $activeNav === 'finance' ? 'active' : '' ?>">Finanzen</a>
+            <?php endif; ?>
+        </nav>
         <div>
             <span class="user"><?= e(Auth::displayName() ?? '') ?> · <?= e(Auth::role() ?? '') ?></span>
             <form method="post" action="/admin/logout">
@@ -28,5 +39,6 @@ $pageTitle = isset($title) ? (string) $title : 'Admin';
     <main class="container">
         <?= $content ?>
     </main>
+    <script type="module" src="/assets/js/admin.js"></script>
 </body>
 </html>

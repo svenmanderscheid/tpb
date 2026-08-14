@@ -28,3 +28,14 @@
 - **DoD M0 vollständig verifiziert** (kein Web-Bootstrap, idempotente Migration auf leerer DB, Upload→Quarantäne→Download, private/ per Web = 404, Audit bei Login/Upload, Restore-fähiges Backup einmal zurückgespielt)
 - **.gitignore-Korrektur** (`*.sql`→`*.sql.gz`) + `.gitattributes` (LF-Normalisierung); Details in `docs/DECISIONS.md`
 - Offen (blockiert M0 nicht): `git push` (SSH-Auth), Apache-Neustart; Fachwerte für M1 stehen in `docs/OFFENE-FRAGEN.md`
+
+## 2026-08-14 – Finanzmodul (Branch feature/finanzen, Abweichung)
+- **Bewusste Abweichung** von der Meilenstein-Reihenfolge auf Owner-Wunsch (Details + Begründung in `docs/DECISIONS.md` #14-18)
+- Migration `050_finance.sql`: `finance_partners` (Gründer + Gewinnanteil in Basispunkten), `capital_contributions` (Kapitaleinlagen), `finance_entries` (Einnahmen/Ausgaben in Cents); Nummer 050 hält 002–006 für die Roadmap frei
+- Neue Capability `tpb_manage_finance` (owner/finance) für Schreibaktionen; Lesen über `tpb_view_costs`
+- Domain `Finance`: `PartnerRepo`, `ContributionRepo`, `EntryRepo`, `FinanceReport` (Einnahmen/Ausgaben/Gewinn, Monatsreihen, Kategorien, Gewinnverteilung), `Amount` (Cents/Basispunkte-Parser ohne Floats)
+- Seiten unter `/admin/finanzen`: Dashboard (KPIs + SVG-Statistiken + Jahr-Filter), Buchungen (erfassen/löschen), Gesellschafter (Gründer, Anteile, Kapitaleinlagen); Navigation im Layout
+- **Diagramme** als eigenes ES-Modul `finance-charts.js` aus einem JSON-Datenblock – Inline-SVG, keine Bibliothek/CDN, CSP `default-src 'self'` unangetastet; CSP-konforme UI-Helfer in `admin.js` (Auto-Submit, Lösch-Rückfrage)
+- Jede Mutation: CSRF + Capability + Audit; Geld als Cents, Anteile als Basispunkte
+- Tests: +17 (`AmountTest`, `FinanceReportTest` inkl. negativer Gewinn) – gesamt **49 grün**
+- End-to-End im Browser verifiziert (Charts rendern, keine CSP-Verstöße)
