@@ -13,3 +13,18 @@
 - Composer 2.10.2 installiert (offizieller getcomposer.org-Installer, Signatur verifiziert; winget-Paket nicht mehr verfügbar) nach `C:\xampp\php`, Wrapper `composer.bat`, `C:\xampp\php` im User-PATH
 - Umgebung: PHP 8.2.12 (laut PROJECT.md §3 zulässiger Fallback für 8.3 – keine Syntax > 8.2 ohne Rückfrage)
 - Offen: `git push` (Auth), Apache-Neustart durch Nutzer für aktive `tpb.local`-Auflösung
+
+## 2026-08-14 – M0 Fundament
+- Branch: `m0-fundament`
+- **Projektskelett** nach §2 (public_html, app/Core, app/Domain, app/Http, app/Views, private/, migrations, cli, tests), `composer.json` (PSR-4 `Tpb\`, Whitelist §1.1: phpmailer + phpunit; PDF/QR/Barcode folgen je Meilenstein), `phpunit.xml`
+- **Core-Module** (§4): Env, Db (PDO-Wrapper + tx), Clock (UTC), Ulid (monoton, getestet), Canonical (kanonisches JSON), Money (Cents/Basispunkte, round-half-up), Request, Response (Security-Header/CSP), Router (+Middleware public/auth/csrf/rate), View, ErrorHandler (Correlation-ID), Csrf, RateLimit, Auth (Session-Härtung, Idle/Absolut-Timeout), Authz (Capability-Matrix), Audit (append-only)
+- **Migration** `001_init.sql` exakt nach §5.2 (13 Fachtabellen + `schema_migrations`)
+- **CLI**: `migrate.php` (Checksum-Schutz, `--status`/`--dry-run`), `user_create.php` (erster Owner nur per CLI), `backup.php` (mysqldump.gz + tar.gz von private/), `seed.php`-Grundgerüst (Env-Guard, Szenario-Dispatch), `outbox_worker.php`
+- **Auth/Login + leeres Admin-Dashboard**; CSP `default-src 'self'`, CSRF auf mutierenden Routen, DB-basiertes Login-Rate-Limit
+- **Asset-Upload** (§8): Whitelist svg/pdf/png/jpg → finfo → Größen-/Pixellimit → SHA-256 → Speicherung unter `artwork/{owner}/{ulid}/original` → Quarantäne → Preflight → GD-PNG-Thumbnail → clean; SVG mit aktiven Inhalten wird abgelehnt; **gesicherter Download** `/files/{publicId}` (Auth oder kurzlebiges Token, immer `attachment`, nie inline)
+- **Outbox + Worker** (§10): Enqueue in derselben Transaktion, Mailer (file-Driver schreibt .eml via PHPMailer), GET_LOCK, Backoff 1/5/15/60, nach 5 Versuchen `failed` + Audit-Alarm
+- **Tests** (§13): 32 Tests grün – Ulid, Canonical, Money, Capability-Matrix (jede Rolle × Capability), Upload-Preflight (falsche Endung/MIME/Übergröße/SVG-Script + Audit), Login-Audit
+- `composer audit`: keine Advisories
+- **DoD M0 vollständig verifiziert** (kein Web-Bootstrap, idempotente Migration auf leerer DB, Upload→Quarantäne→Download, private/ per Web = 404, Audit bei Login/Upload, Restore-fähiges Backup einmal zurückgespielt)
+- **.gitignore-Korrektur** (`*.sql`→`*.sql.gz`) + `.gitattributes` (LF-Normalisierung); Details in `docs/DECISIONS.md`
+- Offen (blockiert M0 nicht): `git push` (SSH-Auth), Apache-Neustart; Fachwerte für M1 stehen in `docs/OFFENE-FRAGEN.md`
