@@ -1,0 +1,9 @@
+.env
+/private/
+/vendor/
+/node_modules/
+*.sql
+*.sql.gz
+*.zip
+.DS_Store
+Thumbs.db
