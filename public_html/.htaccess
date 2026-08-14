@@ -1,0 +1,21 @@
+# Alles über den Front Controller (§2). Statische Assets werden direkt geliefert.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # Vorhandene Dateien/Verzeichnisse (assets/...) direkt ausliefern
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Sonst an index.php
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+# Kein Directory-Listing
+Options -Indexes
+
+# .env & Co. nie ausliefern (liegt zwar außerhalb, doppelte Absicherung)
+<FilesMatch "^\.env">
+    Require all denied
+</FilesMatch>
