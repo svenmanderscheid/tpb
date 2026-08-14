@@ -2,8 +2,8 @@
 /private/
 /vendor/
 /node_modules/
-*.sql
 *.sql.gz
 *.zip
+public_html/assets/img/uploads-cache/
 .DS_Store
 Thumbs.db

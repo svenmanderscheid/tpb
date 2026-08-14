@@ -12,3 +12,9 @@
 8. **Kein separater Warenkorb** – die Konfiguration ist der Bestellentwurf.
 9. **Erstattungen** vorerst manuell (Anbieter-Backend + Gutschrift), kein automatischer Refund-Flow.
 10. **„Ab Lager“-Standardartikel** bewusst verschoben (erst mit Lagermodul-Ausbau, Konzept 20.11 Punkt 4).
+
+## 2026-08-14 – M0-Start (Branch m0-fundament)
+
+11. **`.gitignore`-Korrektur:** Der ursprüngliche Eintrag `*.sql` hätte `migrations/*.sql` vom Commit ausgeschlossen. Gemäß PROJECT.md §2 (dort `*.sql.gz`) auf `*.sql.gz` geändert und `public_html/assets/img/uploads-cache/` ergänzt. Migrationen gehören versioniert ins Repo.
+12. **PHP-Laufzeit lokal 8.2.12** (XAMPP) statt 8.3. PROJECT.md §3 erlaubt 8.2 ausdrücklich als Fallback („keine Syntax > 8.2 ohne Rückfrage"). Es wird keine PHP-8.3-only-Syntax verwendet; `composer.json` fordert `php: >=8.2`.
+13. **Composer 2.10.2** über den offiziellen getcomposer.org-Installer installiert (Signatur SHA-384 gegen `composer.github.io/installer.sig` verifiziert), da das winget-Paket `Composer.Composer` nicht mehr im Katalog ist. Ablage `C:\xampp\php\composer.phar` + `composer.bat`, `C:\xampp\php` im User-PATH.
