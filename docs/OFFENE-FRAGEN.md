@@ -24,6 +24,10 @@ Claude Code liest diese Datei vor jedem Meilenstein und trägt eigene Fragen unt
 - [ ] Zahlungsanbieter-Entscheidung (gehostete Seite, signierte Webhooks, Gebühren, Auszahlungsrhythmus, Luxemburg-Zahlarten) – **Onboarding erst nach Gründung möglich**
 - [ ] Versand: nur Abholung oder zusätzlich Pauschale (`SHIPPING_FLAT_CENTS`)
 - [ ] Rechnungszeitpunkt bei Shop-Vollzahlung – Fiduciaire-Bestätigung (Konzept 20.10)
+- [x] **Bestandsanzeige „noch X auf Lager"** (Owner 2026-08-15): Bestand = Rohlinge je Variante, Reserve je Variante (Default 3), Verfügbarkeit = max(0, Bestand − Reserve), Verkaufssperre bei ≤ 0. Umsetzung in **M6b** (siehe DECISIONS #21). **Noch offen für die Umsetzung:**
+    - [ ] Verhalten bei **konfigurierten** Artikeln, wenn der Rohling-Bestand knapp ist: nur Warnung oder harte Sperre?
+    - [ ] Meldebestand/Nachbestell-Schwelle je Variante gewünscht (für die „Heute"-Liste in M8)?
+    - [ ] Wird Bestand manuell gepflegt oder soll ein Rohling-Wareneingang (Lieferschein) erfasst werden?
 
 ## Vor M8/M9 – Betrieb
 

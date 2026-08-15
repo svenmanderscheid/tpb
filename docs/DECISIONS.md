@@ -31,3 +31,11 @@
 
 19. **Namespace `Http/Api` statt `Http/Public`**: PHP erlaubt `public` (case-insensitiv, also auch `Public`) nicht als Namensraum-Segment. Der in PROJECT.md §2 skizzierte Ordner `Http/Public/` ist als PSR-4-Namespace ungültig. Öffentliche/API-Controller liegen daher unter `app/Http/Api/` (`Tpb\Http\Api`); die späteren öffentlichen Seiten (Konfigurator, Statuslink) kommen unter `app/Http/Site/` (`Tpb\Http\Site`).
 20. **`POST /api/price`** ist der serverseitige Live-Preis (§6): akzeptiert eine Konfiguration mit externen Schlüsseln (Produkt-`public_id`, Varianten-SKU, Technik-Code), rechnet gegen das aktuell veröffentlichte Preisbuch/die Kostenversion und gibt den Breakdown inkl. `calc_hash` zurück. **Kein Client-Betrag.** Persistenz in `price_calculations` folgt mit Migration 003 (Konfigurations-Tabellen).
+
+## 2026-08-15 – Lagerbestand eingeplant (Verfeinerung von #10)
+
+21. **Bestands-/Verfügbarkeitsanzeige im Shop – Umsetzung in M6b** (Owner-Entscheidung 2026-08-15; hebt die pauschale Verschiebung aus #10 gezielt für diese Anzeige auf). Parameter:
+    - **Bestand = Rohlinge je Variante** (Print-on-Demand; konfigurierbare Produkte werden on-demand bedruckt, Bestand wird auf Rohling-/Variantenebene geführt).
+    - **Reserve je Variante einstellbar**, Default **3** (Sicherheitspuffer, wird nie mitverkauft).
+    - **Angezeigte Verfügbarkeit = max(0, Bestand − Reserve)**; im Shop kein Verkauf, wenn Verfügbarkeit ≤ 0.
+    - **Umsetzung erst mit dem Shop (M6b):** eigene Migration (Bestands-/Reservefeld an `product_variants` oder eigene Bestandstabelle mit Bewegungen), Bestandsführung (Reservierung im Checkout, Abbuchung bei bezahlter Bestellung), Admin-Pflege, Audit auf jede Bestandsänderung. **Kein Code in M1/M2.**
