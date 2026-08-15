@@ -47,3 +47,12 @@
 - Tabellengetriebene Engine-Tests (M1-DoD): Staffelgrenzen 4/5, 9/10, 24/25, 49/50; Setup-Waiver; Express-Rundung; `below_min_order`; `below_floor`; Standardartikel ohne Zuschläge; Mischentwurf; deterministischer `calc_hash` → **67 Tests grün**
 - **Dokumentierte Annahmen** (in `docs/OFFENE-FRAGEN.md`, Owner-Bestätigung nötig): EXTRA_COLOR-Auslöser, `cost_items.ref_type`-Zuordnung
 - **Offen für M1-Abschluss**: Admin-CRUD (Produkte/Varianten/Techniken/Placements), Preisbuch-/Kostenversions-Verwaltung mit Draft→Publish, Seed „Basissortiment" (braucht echte Fachwerte des Owners)
+
+## 2026-08-14 – M1 Backend: Katalog- & Preis-Verwaltung
+- **Katalog-CRUD**: `Domain/Catalog` (ProductRepo, VariantRepo, TechniqueRepo, PlacementRepo); Seiten `/admin/katalog` (Produkte, Varianten, Druckpositionen) und `/admin/techniken`
+- **Preisbuch-Verwaltung** `/admin/preisbuecher`: Staffeln + Parameter, **Draft→Publish**; nach Veröffentlichung sind Staffeln/Parameter unveränderlich (serverseitig erzwungen → HTTP 403, per Smoke-Test bestätigt)
+- **Kostenversions-Verwaltung** `/admin/kostenversionen`: Sätze (Lohn/Maschine/Ausschuss/Zielmarge) + Kostenpositionen, Draft→Publish
+- Rechte: `tpb_manage_pricing` (owner/admin) auf allen Routen; CSRF + Audit auf jeder Mutation; Geld als Cents, Prozente als Basispunkte
+- Navigation um „Katalog" und „Preise" erweitert; gemeinsamer `FlashTrait`
+- End-to-End über Apache verifiziert (Produkt→Variante→Position→Technik→Preisbuch mit Staffeln+Parameter→Publish→Immutability-403→Kostenversion→Publish); 67 Tests grün
+- **Hinweis**: DB→Value-Object-Loader für die Live-Preisberechnung sowie Seed „Basissortiment" folgen in M2; Publish-Sudo-Modus (§11) ist als TODO für M7 markiert

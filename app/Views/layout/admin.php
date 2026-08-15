@@ -21,6 +21,12 @@ $activeNav = $nav ?? '';
         <div class="brand">The Printing Brothers</div>
         <nav class="mainnav">
             <a href="/admin" class="<?= $activeNav === 'dashboard' ? 'active' : '' ?>">Dashboard</a>
+            <?php if (Authz::can('tpb_manage_pricing')): ?>
+                <a href="/admin/katalog" class="<?= $activeNav === 'catalog' ? 'active' : '' ?>">Katalog</a>
+            <?php endif; ?>
+            <?php if (Authz::can('tpb_manage_pricing')): ?>
+                <a href="/admin/preisbuecher" class="<?= $activeNav === 'pricing' ? 'active' : '' ?>">Preise</a>
+            <?php endif; ?>
             <?php if (Authz::can('tpb_manage_artwork')): ?>
                 <a href="/admin/assets" class="<?= $activeNav === 'assets' ? 'active' : '' ?>">Assets</a>
             <?php endif; ?>
