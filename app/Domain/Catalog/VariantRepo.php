@@ -40,4 +40,11 @@ final class VariantRepo
     {
         return Db::run('SELECT id FROM product_variants WHERE sku = ? LIMIT 1', [$sku])->fetch() !== false;
     }
+
+    /** @return array{id:int,product_id:int}|null */
+    public static function findBySku(string $sku): ?array
+    {
+        $row = Db::run('SELECT id, product_id FROM product_variants WHERE sku = ? LIMIT 1', [$sku])->fetch();
+        return $row ? ['id' => (int) $row['id'], 'product_id' => (int) $row['product_id']] : null;
+    }
 }

@@ -56,3 +56,11 @@
 - Navigation um „Katalog" und „Preise" erweitert; gemeinsamer `FlashTrait`
 - End-to-End über Apache verifiziert (Produkt→Variante→Position→Technik→Preisbuch mit Staffeln+Parameter→Publish→Immutability-403→Kostenversion→Publish); 67 Tests grün
 - **Hinweis**: DB→Value-Object-Loader für die Live-Preisberechnung sowie Seed „Basissortiment" folgen in M2; Publish-Sudo-Modus (§11) ist als TODO für M7 markiert
+
+## 2026-08-14 – M2-Grundlage: Live-Preis-API + Testobjekt
+- **`cli/seed.php --scenario=test`**: legt ein Testobjekt (Produkt „Testobjekt", Variante, Position, Technik FLEX) samt **veröffentlichtem Preisbuch v1** (Staffeln + Parameter) und **Kostenversion v1** an – Testwerte, idempotent
+- **`PricingRepo`**: lädt das aktuell veröffentlichte Preisbuch/die Kostenversion in die Engine-Value-Objects (§6: Repos laden vorab, Engine rechnet DB-frei)
+- **`POST /api/price`** (öffentlich, `Http/Api`): serverseitiger Live-Preis – akzeptiert Konfiguration mit externen Schlüsseln (Produkt-`public_id`, Varianten-SKU, Technik-Code), rechnet gegen das veröffentlichte Preisbuch, gibt Breakdown + `calc_hash` zurück; **kein Client-Betrag**; Rate-Limit-Bucket `price`
+- End-to-End über Apache verifiziert (10 Stück FLEX = 347,50 €, `below_floor` bei Kleinstauftrag, unbekanntes Produkt → 400); Integrationstest `PricingRepoTest` → **69 Tests grün**
+- Namespace-Entscheidung `Http/Api` statt `Http/Public` (`public` ist reserviert) in `docs/DECISIONS.md` #19; `price_calculations`-Persistenz folgt mit Migration 003
+- **Offen für M2**: Migration 003 (Konfigurations-Tabellen + `price_calculations`), öffentlicher Konfigurator (Vanilla-JS: Produkt→Farbe→Größenmatrix→Upload→Placement-Presets→Live-Preis), Entwurf speichern/laden

@@ -15,6 +15,7 @@ final class RateLimit
         'upload'       => [30, 900],
         'statuslink'   => [60, 900],
         'quote_request' => [10, 3600],
+        'price'        => [240, 300],  // Live-Preis (debounced) im Konfigurator
     ];
 
     private const LOGIN_MAX = 5;

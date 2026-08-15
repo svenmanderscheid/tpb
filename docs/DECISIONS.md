@@ -26,3 +26,8 @@
 16. **Neue Capability `tpb_manage_finance` => [owner, finance]** für schreibende Finanzaktionen; Lesen über die bestehende `tpb_view_costs` (owner/admin/finance). Ergänzt die Matrix aus §4 (dort als „Auszug, vollständig implementieren" gekennzeichnet).
 17. **Begriffsdefinition (mit Owner geklärt):** „Investitionen pro Mitarbeiter" = **Kapitaleinlagen der Gründer** (`capital_contributions`); „Verdienste" = **Gewinnanteil je Gründer** (berechnet aus Gewinn × `profit_share_bps`, keine eigene Auszahlungstabelle). Gewinn = Einnahmen − Ausgaben; Einlagen zählen als Eigenkapital, nicht als Einnahme.
 18. **Diagramme ohne Bibliothek/CDN** (§14.9): Server rendert einen JSON-Datenblock (`<script type="application/json">`, nicht ausführbar), ein eigenes ES-Modul `assets/js/finance-charts.js` erzeugt daraus Inline-SVG. CSP `default-src 'self'` bleibt unangetastet (keine Inline-Skripte).
+
+## 2026-08-14 – M2-Grundlage (Live-Preis)
+
+19. **Namespace `Http/Api` statt `Http/Public`**: PHP erlaubt `public` (case-insensitiv, also auch `Public`) nicht als Namensraum-Segment. Der in PROJECT.md §2 skizzierte Ordner `Http/Public/` ist als PSR-4-Namespace ungültig. Öffentliche/API-Controller liegen daher unter `app/Http/Api/` (`Tpb\Http\Api`); die späteren öffentlichen Seiten (Konfigurator, Statuslink) kommen unter `app/Http/Site/` (`Tpb\Http\Site`).
+20. **`POST /api/price`** ist der serverseitige Live-Preis (§6): akzeptiert eine Konfiguration mit externen Schlüsseln (Produkt-`public_id`, Varianten-SKU, Technik-Code), rechnet gegen das aktuell veröffentlichte Preisbuch/die Kostenversion und gibt den Breakdown inkl. `calc_hash` zurück. **Kein Client-Betrag.** Persistenz in `price_calculations` folgt mit Migration 003 (Konfigurations-Tabellen).

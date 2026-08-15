@@ -10,6 +10,7 @@ use Tpb\Http\Admin\CostVersionController;
 use Tpb\Http\Admin\FinanceController;
 use Tpb\Http\Admin\PriceBookController;
 use Tpb\Http\Admin\TechniqueController;
+use Tpb\Http\Api\PriceController;
 
 /**
  * Routen-Tabelle (§4): [METHOD, PATTERN, [Controller, 'action'], [middleware-tags]].
@@ -32,6 +33,9 @@ return [
 
     // Gesicherter Download (§8): Auth/Objektberechtigung oder kurzlebiges Token
     ['GET',  '/files/{publicId}',       [FileController::class, 'download'], ['public']],
+
+    // Öffentlicher Live-Preis (§6, M2) – serverseitige Berechnung, kein Client-Betrag
+    ['POST', '/api/price',              [PriceController::class, 'quote'],   ['public', 'rate:price']],
 
     // Finanzen (Abweichung, docs/DECISIONS.md #14-18) – Lesen: tpb_view_costs, Schreiben: tpb_manage_finance
     ['GET',  '/admin/finanzen',                       [FinanceController::class, 'dashboard'],          ['auth:tpb_view_costs']],

@@ -39,4 +39,10 @@ final class TechniqueRepo
     {
         return Db::run('SELECT id FROM techniques WHERE code = ? LIMIT 1', [$code])->fetch() !== false;
     }
+
+    public static function idByCode(string $code): ?int
+    {
+        $row = Db::run('SELECT id FROM techniques WHERE code = ? LIMIT 1', [$code])->fetch();
+        return $row ? (int) $row['id'] : null;
+    }
 }
