@@ -10,6 +10,7 @@ use Tpb\Http\Admin\CostVersionController;
 use Tpb\Http\Admin\FinanceController;
 use Tpb\Http\Admin\PriceBookController;
 use Tpb\Http\Admin\TechniqueController;
+use Tpb\Http\Api\ConfigController;
 use Tpb\Http\Api\PriceController;
 
 /**
@@ -36,6 +37,11 @@ return [
 
     // Öffentlicher Live-Preis (§6, M2) – serverseitige Berechnung, kein Client-Betrag
     ['POST', '/api/price',              [PriceController::class, 'quote'],   ['public', 'rate:price']],
+
+    // Konfigurations-Entwurf (M2): speichern (mit Preis-Persistenz), laden, Gast-Upload
+    ['POST', '/api/config/save',        [ConfigController::class, 'save'],   ['public', 'rate:price']],
+    ['GET',  '/api/config/{publicId}',  [ConfigController::class, 'load'],   ['public']],
+    ['POST', '/api/config/upload',      [ConfigController::class, 'upload'], ['public', 'rate:upload']],
 
     // Finanzen (Abweichung, docs/DECISIONS.md #14-18) – Lesen: tpb_view_costs, Schreiben: tpb_manage_finance
     ['GET',  '/admin/finanzen',                       [FinanceController::class, 'dashboard'],          ['auth:tpb_view_costs']],

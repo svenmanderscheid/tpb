@@ -40,6 +40,17 @@ final class PricingRepo
         return new PriceBook((int) $book['version'], (string) $book['currency'], $tiers, $params);
     }
 
+    /** @return array{price_book_id:int,cost_version_id:int}|null Interne IDs der aktiven Versionen. */
+    public static function activeIds(): ?array
+    {
+        $b = Db::run("SELECT id FROM price_books WHERE status = 'published' ORDER BY version DESC LIMIT 1")->fetch();
+        $c = Db::run("SELECT id FROM cost_versions WHERE status = 'published' ORDER BY version DESC LIMIT 1")->fetch();
+        if (!$b || !$c) {
+            return null;
+        }
+        return ['price_book_id' => (int) $b['id'], 'cost_version_id' => (int) $c['id']];
+    }
+
     /** Aktuell veröffentlichte Kostenversion (höchste Version) oder null. */
     public static function activeCostVersion(): ?CostVersion
     {

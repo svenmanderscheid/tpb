@@ -64,3 +64,11 @@
 - End-to-End über Apache verifiziert (10 Stück FLEX = 347,50 €, `below_floor` bei Kleinstauftrag, unbekanntes Produkt → 400); Integrationstest `PricingRepoTest` → **69 Tests grün**
 - Namespace-Entscheidung `Http/Api` statt `Http/Public` (`public` ist reserviert) in `docs/DECISIONS.md` #19; `price_calculations`-Persistenz folgt mit Migration 003
 - **Offen für M2**: Migration 003 (Konfigurations-Tabellen + `price_calculations`), öffentlicher Konfigurator (Vanilla-JS: Produkt→Farbe→Größenmatrix→Upload→Placement-Presets→Live-Preis), Entwurf speichern/laden
+
+## 2026-08-15 – M2: Migration 003 + Konfigurations-Persistenz
+- **Migration `003_config_customer_quote.sql`** (§5.4): customers, customer_consents, configurations, configuration_items, configuration_item_sizes, configuration_layers, configuration_units, price_calculations, quotes, quote_items (FKs ON DELETE RESTRICT; `quotes.amends_order_id` bewusst ohne FK, da `orders` erst in 004)
+- **`Domain/Config/ConfigMapper`**: externe Schlüssel (Produkt-`public_id`, Varianten-SKU, Technik-Code, Placement-Code, Asset-`public_id`) → interne IDs; **Positionen und Motive werden serverseitig aus den Layern abgeleitet** (Client bestimmt sie nicht)
+- **`ConfigurationRepo`**: Entwurf speichern/aktualisieren (Positionsdaten in mm) + laden über `public_id`; `persistCalculation` schreibt jede Berechnung nach `price_calculations`
+- **Konfigurations-API** (`Http/Api`): `POST /api/config/save` (serverseitige Preisberechnung + Persistenz), `GET /api/config/{publicId}` (Round-trip), `POST /api/config/upload` (Gast-Logo-Upload über dieselbe Preflight-/Quarantäne-Pipeline); `/api/price` nutzt jetzt denselben Mapper
+- Tests: `ConfigSaveTest` (Ableitung Positionen/Motive, Preis→Speichern→Laden, Update ersetzt Positionen) → **72 Tests grün**; End-to-End über Apache verifiziert (Upload→Save 242,50 €→Load)
+- **Offen für M2**: öffentliche Konfigurator-Seite (Vanilla-JS-UI) und Standardprodukt-Seite
