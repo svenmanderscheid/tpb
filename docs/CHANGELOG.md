@@ -39,3 +39,11 @@
 - Jede Mutation: CSRF + Capability + Audit; Geld als Cents, Anteile als Basispunkte
 - Tests: +17 (`AmountTest`, `FinanceReportTest` inkl. negativer Gewinn) – gesamt **49 grün**
 - End-to-End im Browser verifiziert (Charts rendern, keine CSP-Verstöße)
+
+## 2026-08-14 – M1 begonnen: Katalog-Schema & Preis-Engine (Branch m1-katalog-preis)
+- `main` per Fast-Forward auf M0 + Finanzmodul gebracht und gepusht
+- Migration `002_catalog_pricing.sql` nach §5.3 (products, product_variants, techniques, placements, product_prints, price_books, price_tiers, price_params, cost_versions, cost_items; FKs ON DELETE RESTRICT, Maße DECIMAL(6,1))
+- **Preis-Engine (§6)** `Domain/Pricing`: `PriceBook`/`CostVersion` (Value Objects), `PriceEngine::calculate` (Verkaufspreis + interne Untergrenze), `Breakdown` (kanonisierbar, `calc_hash`), `PricingException`; reine Int-Arithmetik, keine DB-Zugriffe
+- Tabellengetriebene Engine-Tests (M1-DoD): Staffelgrenzen 4/5, 9/10, 24/25, 49/50; Setup-Waiver; Express-Rundung; `below_min_order`; `below_floor`; Standardartikel ohne Zuschläge; Mischentwurf; deterministischer `calc_hash` → **67 Tests grün**
+- **Dokumentierte Annahmen** (in `docs/OFFENE-FRAGEN.md`, Owner-Bestätigung nötig): EXTRA_COLOR-Auslöser, `cost_items.ref_type`-Zuordnung
+- **Offen für M1-Abschluss**: Admin-CRUD (Produkte/Varianten/Techniken/Placements), Preisbuch-/Kostenversions-Verwaltung mit Draft→Publish, Seed „Basissortiment" (braucht echte Fachwerte des Owners)

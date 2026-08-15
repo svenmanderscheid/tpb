@@ -39,4 +39,8 @@ Claude Code liest diese Datei vor jedem Meilenstein und trägt eigene Fragen unt
 
 ## Von Claude Code eingetragene Fragen
 
-*(leer)*
+### M1 – Preis-Engine (§6): Klärungsbedarf, aktuell mit dokumentierten Default-Annahmen umgesetzt
+
+- [ ] **EXTRA_COLOR_CENTS-Auslöser**: §6.3 nennt „ggf. EXTRA_COLOR_CENTS", ohne den Auslöser zu definieren. Aktuelle Annahme: je Position eine Basisfarbe frei, jede weitere Farbe = ein `extra_colors`-Zähler je Position × `EXTRA_COLOR_CENTS`. Der Zähler kommt aus der Konfiguration; Default 0. **Bitte fachliche Definition bestätigen** (Wann/womit entstehen Extrafarben? Pro Position oder pro Motiv?).
+- [ ] **Kostenzuordnung (`cost_items.ref_type`)** für die interne Untergrenze: §6/§5.3 legen nicht fest, welcher Kostenparameter an welchem `ref_type` hängt. Aktuelle Annahme: `BLANK_CENTS`/`MATERIAL_CENTS` an `variant` (Fallback `product`); `SETUP_MIN`/`UNIT_MIN`/`MACHINE_MIN` an `technique` (Fallback `product`). **Bitte bestätigen oder verbindlich festlegen.**
+- [ ] **M1-Fachwerte** (Preisbuch v1, price_params, Kostenversion v1) fehlen weiterhin (siehe Abschnitt „Vor M1"). Die Engine ist implementiert und tabellengetrieben getestet; die **echten Werte** werden über die Admin-UI/Seeds eingepflegt, sobald sie vorliegen – sie werden nicht erfunden.
