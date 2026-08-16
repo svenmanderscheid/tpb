@@ -5,7 +5,7 @@ Claude Code liest diese Datei vor jedem Meilenstein und trägt eigene Fragen unt
 
 ## Vor M1 – Katalog & Preise (§15)
 
-- [ ] MVP-Produktliste: welche Produkte, Farben, Größen, SKUs (Schema `TSH-COT-BLK-M`)
+- [~] MVP-Produktliste (Owner 2026-08-16): **Hoodies und T-Shirts, Größen S/M/L/XL/XXL**. **Noch offen:** Farben, exakte SKUs, Staffelpreise, Kostenwerte.
 - [ ] Standardsortiment: Hausdesigns als Assets, Platzierungen/Maße für `product_prints` (Konzept 20.11)
 - [ ] Staffelpreise je Produkt in Cents (Preisbuch v1, inkl. Staffelgrenzen)
 - [ ] `price_params`-Werte: Setup-Gebühr + Erlassmenge, Extra-Position, Extra-Farbe, Name/Nummer, Dateiaufbereitung, Express-Bps, Mindestbestellwert
@@ -32,14 +32,14 @@ Claude Code liest diese Datei vor jedem Meilenstein und trägt eigene Fragen unt
 
 - [ ] Zahlungsanbieter-Entscheidung (gehostete Seite, signierte Webhooks, Gebühren, Auszahlungsrhythmus, Luxemburg-Zahlarten) – **Onboarding erst nach Gründung möglich**
 - [x] **Versand (Owner 2026-08-16):** Es wird versendet. **Premium-Lieferungen = Eigenlieferung** (selbst zugestellt, Hausetikett, kein Carrier). **Normale Lieferungen = günstigster externer Anbieter** (Carrier variabel, pro Sendung wählbar). Umsetzung: Versand-Grundgerüst + Hausetikett **jetzt** gebaut (Migration 051, DECISIONS #28); generische `CarrierAdapter`-Schnittstelle, „günstigster Anbieter" als Registry. **Noch offen für die Umsetzung:**
-    - [ ] **Carrier-Zugang(e)** für Standardversand (welche Anbieter kommen in die „günstigster"-Auswahl, API/Label-Format, Vertrag) – echte Carrier-Label + Tracking erst mit Zugang (wie Zahlung: nach Gründung).
-    - [ ] **Versandkosten-Logik** für Standardversand: feste Pauschale (`SHIPPING_FLAT_CENTS`) oder gewichts-/carrierabhängig? Bis dahin manuelle Kosteneingabe je Sendung.
-    - [ ] **Autodruck** (still) für Job-/Versandetiketten: lokaler Druck-Agent (QZ Tray/Print-Server) + Zieldrucker – spätere Ausbaustufe (§9.6 Stufe 1 bleibt bis dahin).
+    - [x] **Carrier (Owner 2026-08-16):** **National = Post Luxembourg**, **International = DHL**. Echte Label/Tracking erst mit API-Zugang (nach Gründung); bis dahin Hausetikett.
+    - [x] **Versandkosten (Owner 2026-08-16):** **im Preis einkalkuliert**; **ab 50 € Bestellwert nationaler Gratisversand**. → noch umzusetzen: Versandkosten-Regel in Preis/Checkout (national vs. international, Gratis-Schwelle 50 €). Kostenhöhe je Zone noch offen.
+    - [x] **Autodruck gewünscht (Owner 2026-08-16):** Bei eingehender (bezahlter) Bestellung soll **automatisch ein Etikett gedruckt** werden. Braucht lokalen Druck-Agenten + Zieldrucker (Ausbaustufe); Systemseitig wird das Etikett bereits automatisch erzeugt – der stille Druck folgt mit dem Agenten.
 - [ ] Rechnungszeitpunkt bei Shop-Vollzahlung – Fiduciaire-Bestätigung (Konzept 20.10)
-- [x] **Bestandsanzeige „noch X auf Lager"** (Owner 2026-08-15): Bestand = Rohlinge je Variante, Reserve je Variante (Default 3), Verfügbarkeit = max(0, Bestand − Reserve), Verkaufssperre bei ≤ 0. Umsetzung in **M6b** (siehe DECISIONS #21). **Noch offen für die Umsetzung:**
-    - [ ] Verhalten bei **konfigurierten** Artikeln, wenn der Rohling-Bestand knapp ist: nur Warnung oder harte Sperre?
-    - [ ] Meldebestand/Nachbestell-Schwelle je Variante gewünscht (für die „Heute"-Liste in M8)?
-    - [ ] Wird Bestand manuell gepflegt oder soll ein Rohling-Wareneingang (Lieferschein) erfasst werden?
+- [x] **Bestandsanzeige „noch X auf Lager"** (Owner 2026-08-15/16): Bestand = Rohlinge je Variante, Reserve je Variante (Default 3, nie angezeigt/verkauft), Verfügbarkeit = max(0, Bestand − Reserve − offene Reservierungen). Umsetzung als eigenes **Lagermodul** (Migration 052, DECISIONS #31). **Owner-Antworten 2026-08-16:**
+    - [x] **Konfigurierte Artikel bei knappem Bestand:** Shop zeigt „nur noch X", beim Konfigurieren **Warnung** bei geringem Bestand; **beim Bezahlen erneute Prüfung** (Reservierung, kein Oversell); **Abbuchung erst bei erfolgreicher Zahlung**; bei Abbruch/Ablauf Reservierung freigeben.
+    - [x] **Meldebestand je Variante** gewünscht, **Benachrichtigung** bei Unterschreiten (Default 5), dann bei 2, dann leer. Dashboard-Seite mit Sofort-Übersicht; Schwellwert je Artikel **und** „für alle setzen".
+    - [x] **Pflege:** vorerst **manuell**, später automatischer **Wareneingang** (Lieferschein).
 
 ## Vor M8/M9 – Betrieb
 

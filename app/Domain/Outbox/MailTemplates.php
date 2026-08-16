@@ -100,6 +100,30 @@ final class MailTemplates
         return ['to' => (string) $p['to_email'], 'subject' => $subject, 'text' => $text, 'html' => $html];
     }
 
+    /** @param array<string,mixed> $p Meldebestand-Alarm (intern an den Owner). */
+    public static function stockLow(array $p): array
+    {
+        $levels = ['reorder' => 'Meldebestand erreicht', 'critical' => 'kritisch niedrig', 'empty' => 'ausverkauft'];
+        $levelText = $levels[(string) ($p['level'] ?? '')] ?? (string) ($p['level'] ?? '');
+        $sku = (string) $p['sku'];
+        $product = (string) ($p['product'] ?? '');
+        $stock = (int) ($p['stock'] ?? 0);
+
+        $subject = "Lager: {$sku} {$levelText} ({$stock} Stück)";
+        $text = "Bestandshinweis\n\n"
+            . "Artikel: {$product} ({$sku})\n"
+            . "Status: {$levelText}\n"
+            . "Aktueller Bestand: {$stock} Stück\n\n"
+            . "Bitte im Lager prüfen und ggf. nachbestellen.";
+        $html = '<p><strong>Bestandshinweis</strong></p>'
+            . '<p>Artikel: ' . e($product) . ' (' . e($sku) . ')<br>'
+            . 'Status: <strong>' . e($levelText) . '</strong><br>'
+            . 'Aktueller Bestand: ' . e((string) $stock) . ' Stück</p>'
+            . '<p>Bitte im Lager prüfen und ggf. nachbestellen.</p>';
+
+        return ['to' => (string) $p['to_email'], 'subject' => $subject, 'text' => $text, 'html' => $html];
+    }
+
     private static function base(): string
     {
         return rtrim((string) (Env::get('APP_URL', 'http://tpb.local') ?? 'http://tpb.local'), '/');

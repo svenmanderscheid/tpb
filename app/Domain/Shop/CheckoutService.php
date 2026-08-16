@@ -76,6 +76,20 @@ final class CheckoutService
             $order = OrderRepo::createFromSnapshot((int) $customer['id'], null, $pb->currency, $snapshot, 'PENDING_PAYMENT', null, 'shop_checkout');
             $orderId = (int) $order['id'];
 
+            // Bestand reservieren (kein Oversell). Abbuchung erst bei bezahlter Bestellung.
+            $variantQtys = [];
+            foreach ($resolved['items'] as $it) {
+                foreach ($it['sizes'] as $s) {
+                    $vid = (int) $s['variant_id'];
+                    $variantQtys[$vid] = ($variantQtys[$vid] ?? 0) + (int) $s['qty'];
+                }
+            }
+            try {
+                \Tpb\Domain\Stock\StockService::reserveForOrder($orderId, $variantQtys, null);
+            } catch (\Tpb\Domain\Stock\StockException $e) {
+                throw new CheckoutException($e->getMessage());
+            }
+
             // Rechtserklärungen festhalten.
             foreach (LegalDocRepo::allPublished('de') as $doc) {
                 if (in_array((string) $doc['doc_type'], $acceptedDocTypes, true)) {

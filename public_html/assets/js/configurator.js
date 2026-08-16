@@ -45,18 +45,31 @@ function renderForm() {
   // Größenmatrix
   const sizeCard = el('div', { class: 'card' }, [el('h2', { text: 'Größen & Mengen' })]);
   const table = el('table');
-  table.appendChild(el('thead', {}, el('tr', {}, [th('Variante'), th('Farbe'), th('Größe'), th('Menge')])));
+  table.appendChild(el('thead', {}, el('tr', {}, [th('Variante'), th('Farbe'), th('Größe'), th('Lager'), th('Menge')])));
   const tbody = el('tbody');
   for (const v of data.variants) {
+    const avail = typeof v.available === 'number' ? v.available : null;
+    const stockCell = avail === null
+      ? td('–')
+      : el('td', { class: avail <= 0 ? 'stock-low' : (avail <= 5 ? 'stock-low' : 'muted') },
+          [avail <= 0 ? 'ausverkauft' : ('noch ' + avail)]);
+    const warn = el('div', { class: 'stock-low' });
     const qtyInput = el('input', { type: 'number', min: '0', inputmode: 'numeric', value: state.sizes[v.sku] || '' });
     qtyInput.addEventListener('input', () => {
       const q = parseInt(qtyInput.value, 10);
       if (q > 0) state.sizes[v.sku] = q; else delete state.sizes[v.sku];
+      if (avail !== null && q > avail) {
+        qtyInput.classList.add('over');
+        warn.textContent = 'Nur noch ' + Math.max(0, avail) + ' verfügbar.';
+      } else {
+        qtyInput.classList.remove('over');
+        warn.textContent = (avail !== null && avail > 0 && avail <= 5 && q > 0) ? 'Geringer Bestand.' : '';
+      }
       schedulePrice();
     });
     tbody.appendChild(el('tr', {}, [
-      td(v.sku), td(v.color_name || '–'), td(v.size || '–'),
-      el('td', { class: 'num' }, [qtyInput]),
+      td(v.sku), td(v.color_name || '–'), td(v.size || '–'), stockCell,
+      el('td', { class: 'num' }, [qtyInput, warn]),
     ]));
   }
   table.appendChild(tbody);

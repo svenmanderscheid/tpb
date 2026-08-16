@@ -131,6 +131,7 @@ final class CheckoutController
         $intent = PaymentIntentRepo::findByPublicId((string) ($params['publicId'] ?? ''));
         if ($intent !== null && (string) $intent['status'] === 'created') {
             PaymentIntentRepo::setStatus((int) $intent['id'], 'canceled', 'customer_cancelled');
+            \Tpb\Domain\Stock\StockService::releaseForOrder((int) $intent['order_id']); // Reservierung freigeben
         }
         Response::html(View::render('site/checkout_result', ['kind' => 'cancelled'], null));
     }

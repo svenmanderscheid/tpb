@@ -162,3 +162,15 @@
 - **Tests:** `ShopCheckoutTest` (7) → **102 Tests grün**, `composer audit` sauber
 - **Verifiziert (Testmodus, echtes HTTP):** Konfigurator → Checkout → Bezahlseite → Zahlung simuliert → Order CONFIRMED, Rechnung 2026-000001 ISSUED, cur_payment PAID, 2 Mails versendet; Checkout CSP-/konsolensauber
 - **Nicht in diesem Build:** Lager/Bestand (DECISIONS #21) – offene Sub-Fragen unbeantwortet; echter Zahlungsanbieter (nach Gründung)
+
+## 2026-08-16 – M6c: Lagermodul (Owner-Antworten, Branch m1-katalog-preis)
+- **Owner-Antworten 2026-08-16** zu den offenen Lager-Fragen umgesetzt (DECISIONS #31).
+- **Migration 052:** `product_variants` um `stock_qty/reserve_qty/reorder_threshold` erweitert; `stock_movements` (Audit), `stock_reservations` (Checkout-Holds), `stock_alerts` (dedup je Stufe)
+- **Domäne `Stock`:** `StockRepo` (Verfügbarkeit = max(0, Bestand − Reserve − aktive Reservierungen)), `StockService` (reservieren/abbuchen/freigeben, Wareneingang/Korrektur, Reserve/Meldebestand, Alarme)
+- **Kein Oversell:** Checkout reserviert je Variante mit `SELECT … FOR UPDATE`; **Abbuchung erst bei bezahlter Bestellung** (Webhook → consume); **Freigabe** bei Abbruch/Ablauf (`cli/expire.php`, Cancel)
+- **Meldebestand-Alarme** über Outbox an den Owner: Default 5, dann kritisch (≤2), dann leer – einmalig je Stufe, Rücksetzung bei Wiederauffüllung
+- **Shop-Anzeige:** Konfigurator zeigt „noch X" je Größe + Warnung bei geringem/überschrittenem Bestand (CSP-konform)
+- **Admin `/admin/lager`:** Sofort-Übersicht (Bestand/Reserve/Reserviert/Verfügbar/Meldebestand), Wareneingang/Korrektur/Reserve/Meldebestand je Variante + „für alle setzen"; Recht `tpb_manage_pricing`
+- **Tests:** `StockFlowTest` (5) → **107 Tests grün**, `composer audit` sauber
+- **Verifiziert (echtes HTTP):** Konfigurator zeigt Verfügbarkeit (17); Checkout reserviert (→7); Zahlung bucht ab (stock 10, Bewegung `sale`, Reservierung consumed); Admin-Lagerseite 200
+- **Owner-Antworten zusätzlich dokumentiert** (OFFENE-FRAGEN): Produkte Hoodies/T-Shirts S–XXL; Versand national Post LU / international DHL, Kosten im Preis + Gratis ab 50 € national, Autodruck gewünscht (Etikett wird erzeugt; stiller Druck via Agent später). **Noch offen:** Farben/Preise/Kostenwerte, Recht/Steuer, Firmengründung.

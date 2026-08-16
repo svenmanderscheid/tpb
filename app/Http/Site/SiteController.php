@@ -85,6 +85,7 @@ final class SiteController
                 'color_name' => (string) ($v['color_name'] ?? ''),
                 'color_code' => (string) ($v['color_code'] ?? ''),
                 'size'       => (string) ($v['size'] ?? ''),
+                'available'  => \Tpb\Domain\Stock\StockRepo::availability((int) $v['id']),
             ], $variants),
             'placements' => array_map(static fn ($p) => [
                 'code'     => (string) $p['code'],

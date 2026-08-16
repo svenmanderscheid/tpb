@@ -37,6 +37,7 @@ final class ShopCheckoutTest extends TestCase
         Db::run('UPDATE print_jobs SET reprint_of_id = NULL');
         Db::run('UPDATE invoices SET credited_invoice_id = NULL');
         foreach ([
+            'stock_alerts', 'stock_reservations', 'stock_movements',
             'payment_webhook_events', 'payment_intents', 'idempotency_keys',
             'payment_allocations', 'payments', 'invoice_lines', 'invoices', 'expenses',
             'print_jobs', 'shipments', 'production_events', 'production_jobs',
@@ -68,6 +69,7 @@ final class ShopCheckoutTest extends TestCase
         $this->productPublic = ProductRepo::create('configurable', 'TEST', 'Testobjekt', 'testobjekt', null, null);
         $productId = (int) ProductRepo::findByPublicId($this->productPublic)['id'];
         VariantRepo::create($productId, 'TEST-BLK-M', 'BLK', 'Schwarz', 'M');
+        Db::run("UPDATE product_variants SET stock_qty = 100, reserve_qty = 0 WHERE sku = 'TEST-BLK-M'");
         PlacementRepo::create($productId, 'front', 'brust', 'Brust', [], true);
         $bv = PriceBookRepo::nextVersion();
         $bookId = PriceBookRepo::create($bv, 'EUR');

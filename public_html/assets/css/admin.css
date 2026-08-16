@@ -161,3 +161,11 @@ th { color: var(--muted); font-weight: 600; }
 .status-badge.draft { color: var(--muted); }
 .actions-row { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem; }
 .actions-row form { display: inline; }
+
+/* Lager (M6c) */
+.stock-low { color: var(--danger); font-size: 0.85rem; }
+input.over { border-color: var(--danger) !important; }
+.stock-actions { display: flex; flex-direction: column; gap: 0.3rem; }
+.stock-actions .inline-form { display: flex; gap: 0.3rem; align-items: center; }
+.stock-input { width: 4.5rem; padding: 0.3rem 0.4rem; background: var(--panel-2); border: 1px solid var(--border); border-radius: 6px; color: var(--text); }
+.stock-actions .btn { padding: 0.3rem 0.55rem; font-size: 0.8rem; white-space: nowrap; }

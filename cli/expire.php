@@ -33,6 +33,7 @@ foreach (OrderRepo::pendingPaymentOlderThan($cutoff) as $o) {
         }
         Audit::log('order', (string) $o['public_id'], 'checkout.expired', ['actor_label' => 'system', 'to_state' => 'EXPIRED']);
     });
+    \Tpb\Domain\Stock\StockService::releaseForOrder((int) $o['id']); // reservierten Bestand freigeben
     $orders++;
 }
 

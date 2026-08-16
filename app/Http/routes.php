@@ -17,6 +17,7 @@ use Tpb\Http\Admin\ProductionController;
 use Tpb\Http\Admin\QuoteController;
 use Tpb\Http\Admin\ShippingController;
 use Tpb\Http\Admin\ShopController;
+use Tpb\Http\Admin\StockController;
 use Tpb\Http\Admin\TechniqueController;
 use Tpb\Http\Api\ConfigController;
 use Tpb\Http\Api\PriceController;
@@ -143,6 +144,11 @@ return [
 
     // Shop-Zahlungen (M6b) – Lesen: tpb_view_costs
     ['GET',  '/admin/zahlungen',                         [ShopController::class, 'payments'],           ['auth:tpb_view_costs']],
+
+    // Lager (M6c) – Recht: tpb_manage_pricing
+    ['GET',  '/admin/lager',                             [StockController::class, 'index'],             ['auth:tpb_manage_pricing']],
+    ['POST', '/admin/lager/alle/meldebestand',           [StockController::class, 'bulkThreshold'],     ['auth:tpb_manage_pricing', 'csrf']],
+    ['POST', '/admin/lager/{id}',                        [StockController::class, 'update'],            ['auth:tpb_manage_pricing', 'csrf']],
 
     // Versand & Fulfillment (DECISIONS #28) – Rechte: tpb_manage_production
     ['POST', '/admin/auftrag/{publicId}/versand',              [ShippingController::class, 'configure'], ['auth:tpb_manage_production', 'csrf']],

@@ -120,6 +120,9 @@ final class ShopWebhookService
             Audit::log('order', (string) $order['public_id'], 'shop.paid', ['actor_label' => 'system', 'from_state' => 'PENDING_PAYMENT', 'to_state' => 'CONFIRMED']);
         });
 
+        // Bezahlt ⇒ reservierten Bestand abbuchen (eigene Transaktion, idempotent).
+        \Tpb\Domain\Stock\StockService::consumeForOrder((int) $order['id'], null);
+
         self::mark($eventId, 'done', null);
         return ['status' => 'ok', 'http' => 200];
     }

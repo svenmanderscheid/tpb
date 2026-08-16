@@ -36,6 +36,9 @@ $activeNav = $nav ?? '';
             <?php if (Authz::can('tpb_manage_pricing')): ?>
                 <a href="/admin/preisbuecher" class="<?= $activeNav === 'pricing' ? 'active' : '' ?>">Preise</a>
             <?php endif; ?>
+            <?php if (Authz::can('tpb_manage_pricing')): ?>
+                <a href="/admin/lager" class="<?= $activeNav === 'stock' ? 'active' : '' ?>">Lager</a>
+            <?php endif; ?>
             <?php if (Authz::can('tpb_manage_artwork')): ?>
                 <a href="/admin/assets" class="<?= $activeNav === 'assets' ? 'active' : '' ?>">Assets</a>
             <?php endif; ?>
