@@ -31,6 +31,33 @@ final class OrderRepo
         return $row === false ? null : $row;
     }
 
+    /** Aktueller Zustand der Order-Achse (§7) aus status_events (keine Cache-Spalte). */
+    public static function orderState(int $orderId): string
+    {
+        $s = Db::run(
+            "SELECT to_state FROM status_events WHERE aggregate_type = 'order' AND aggregate_id = ? AND axis = 'order' ORDER BY id DESC LIMIT 1",
+            [$orderId]
+        )->fetchColumn();
+        return $s === false ? '' : (string) $s;
+    }
+
+    /**
+     * Noch nicht bezahlte Shop-Orders (Order-Achse = PENDING_PAYMENT), die vor dem
+     * Stichtag angelegt wurden – für cli/expire.php.
+     * @return array<int,array<string,mixed>>
+     */
+    public static function pendingPaymentOlderThan(string $cutoffUtc): array
+    {
+        return Db::run(
+            "SELECT o.id, o.public_id, o.order_number FROM orders o
+             WHERE o.ordered_at < ?
+               AND (SELECT se.to_state FROM status_events se
+                    WHERE se.aggregate_type = 'order' AND se.aggregate_id = o.id AND se.axis = 'order'
+                    ORDER BY se.id DESC LIMIT 1) = 'PENDING_PAYMENT'",
+            [$cutoffUtc]
+        )->fetchAll();
+    }
+
     /** @return array<int,array<string,mixed>> Alle Positionen eines Auftrags. */
     public static function items(int $orderId): array
     {
@@ -71,13 +98,27 @@ final class OrderRepo
      */
     public static function createFromQuote(array $quote, array $snapshot, ?int $actorUserId): array
     {
+        return self::createFromSnapshot(
+            (int) $quote['customer_id'], (int) $quote['id'], (string) ($quote['currency'] ?? 'EUR'),
+            $snapshot, 'CONFIRMED', $actorUserId, 'quote_accepted'
+        );
+    }
+
+    /**
+     * Erzeugt Order + Items + Units aus einem Snapshot. Startzustand der Order-Achse:
+     * CONFIRMED (Pfad A, Angebotsannahme) oder PENDING_PAYMENT (Pfad B, Shop-Checkout).
+     * Artwork-Cache: MISSING falls konfigurierte Position vorhanden, sonst LOCKED (v1.4).
+     *
+     * @param array<string,mixed> $snapshot
+     * @return array{id:int,public_id:string,order_number:string}
+     */
+    public static function createFromSnapshot(int $customerId, ?int $quoteId, string $currency, array $snapshot, string $initialState, ?int $actorUserId, string $reason): array
+    {
         $now = Clock::nowUtcSeconds();
         $publicId = Ulid::generate();
         $orderNumber = NumberSequence::next('order', 'ORD');
 
-        $totals = $snapshot['totals'] ?? [];
-        $totalCents = (int) ($totals['total_cents'] ?? 0);
-        $currency = (string) ($quote['currency'] ?? 'EUR');
+        $totalCents = (int) ($snapshot['totals']['total_cents'] ?? 0);
         $customerSnapshot = Canonical::json($snapshot['customer'] ?? []);
 
         $hasConfigured = false;
@@ -96,7 +137,7 @@ final class OrderRepo
                  cur_production, cur_fulfillment, cur_invoice, created_at, updated_at)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
             [
-                $publicId, $orderNumber, (int) $quote['id'], (int) $quote['customer_id'], $customerSnapshot,
+                $publicId, $orderNumber, $quoteId, $customerId, $customerSnapshot,
                 $currency, $totalCents, 0, $now, 'NOT_DUE', $curArtwork,
                 'BLOCKED', 'UNFULFILLED', 'NONE', $now, $now,
             ]
@@ -129,18 +170,17 @@ final class OrderRepo
             }
         }
 
-        // Auftragsachse: (Start) -> CONFIRMED (Pfad A, Annahme des Angebots).
-        Status::transition('order', $orderId, 'order', null, 'CONFIRMED', [
+        Status::transition('order', $orderId, 'order', null, $initialState, [
             'actor_user_id' => $actorUserId,
             'actor_label'   => $actorUserId === null ? 'customer' : null,
-            'reason'        => 'quote_accepted',
+            'reason'        => $reason,
         ]);
 
         Audit::log('order', $publicId, 'order.created', [
             'actor_user_id' => $actorUserId,
             'actor_label'   => $actorUserId === null ? 'customer' : null,
-            'to_state'      => 'CONFIRMED',
-            'metadata'      => ['order_number' => $orderNumber, 'total_cents' => $totalCents, 'quote_id' => (int) $quote['id']],
+            'to_state'      => $initialState,
+            'metadata'      => ['order_number' => $orderNumber, 'total_cents' => $totalCents, 'quote_id' => $quoteId],
         ]);
 
         return ['id' => $orderId, 'public_id' => $publicId, 'order_number' => $orderNumber];

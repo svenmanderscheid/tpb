@@ -46,6 +46,9 @@ $activeNav = $nav ?? '';
                 <a href="/admin/ausgaben" class="<?= $activeNav === 'expenses' ? 'active' : '' ?>">Ausgaben</a>
             <?php endif; ?>
             <?php if (Authz::can('tpb_view_costs')): ?>
+                <a href="/admin/zahlungen" class="<?= $activeNav === 'shoppay' ? 'active' : '' ?>">Shop-Zahlungen</a>
+            <?php endif; ?>
+            <?php if (Authz::can('tpb_view_costs')): ?>
                 <a href="/admin/finanzen" class="<?= $activeNav === 'finance' ? 'active' : '' ?>">Finanzen</a>
             <?php endif; ?>
         </nav>

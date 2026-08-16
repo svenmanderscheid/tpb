@@ -16,9 +16,12 @@ use Tpb\Http\Admin\PriceBookController;
 use Tpb\Http\Admin\ProductionController;
 use Tpb\Http\Admin\QuoteController;
 use Tpb\Http\Admin\ShippingController;
+use Tpb\Http\Admin\ShopController;
 use Tpb\Http\Admin\TechniqueController;
 use Tpb\Http\Api\ConfigController;
 use Tpb\Http\Api\PriceController;
+use Tpb\Http\Api\WebhookController;
+use Tpb\Http\Site\CheckoutController;
 use Tpb\Http\Site\ProofViewController;
 use Tpb\Http\Site\QuoteViewController;
 use Tpb\Http\Site\RequestController;
@@ -58,6 +61,15 @@ return [
 
     // Interne Job-Scan-Ansicht per QR-Token (M5)
     ['GET',  '/scan/{publicId}',               [ScanController::class, 'show'],         ['public']],
+
+    // Shop-Checkout (M6b, Pfad B) – Sofortkauf mit Online-Zahlung (Testmodus)
+    ['GET',  '/checkout',                       [CheckoutController::class, 'form'],     ['public']],
+    ['POST', '/checkout',                       [CheckoutController::class, 'submit'],   ['public', 'csrf', 'rate:price']],
+    ['GET',  '/checkout/danke',                 [CheckoutController::class, 'thanks'],   ['public']],
+    ['GET',  '/pay/{publicId}',                 [CheckoutController::class, 'pay'],      ['public']],
+    ['POST', '/pay/{publicId}/simulieren',      [CheckoutController::class, 'simulate'], ['public', 'csrf']],
+    ['POST', '/pay/{publicId}/abbrechen',       [CheckoutController::class, 'cancel'],   ['public', 'csrf']],
+    ['POST', '/webhooks/payment',              [WebhookController::class, 'payment'],   ['public', 'rate:price']],
 
     // Auth
     ['GET',  '/admin/login',   [AuthController::class, 'showLogin'],  ['public']],
@@ -128,6 +140,9 @@ return [
     // Ausgaben (M6) – Lesen: tpb_view_costs, Erfassen: tpb_manage_finance
     ['GET',  '/admin/ausgaben',                          [ExpenseController::class, 'index'],           ['auth:tpb_view_costs']],
     ['POST', '/admin/ausgaben',                          [ExpenseController::class, 'store'],           ['auth:tpb_manage_finance', 'csrf', 'rate:upload']],
+
+    // Shop-Zahlungen (M6b) – Lesen: tpb_view_costs
+    ['GET',  '/admin/zahlungen',                         [ShopController::class, 'payments'],           ['auth:tpb_view_costs']],
 
     // Versand & Fulfillment (DECISIONS #28) – Rechte: tpb_manage_production
     ['POST', '/admin/auftrag/{publicId}/versand',              [ShippingController::class, 'configure'], ['auth:tpb_manage_production', 'csrf']],

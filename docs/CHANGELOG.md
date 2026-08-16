@@ -148,3 +148,17 @@
 - **Tests:** `InvoiceFlowTest` (6) → **95 Tests grün**, `composer audit` sauber
 - **Verifiziert:** Rechnungs-PDF (2026-000001, 190,00 €, einseitig, Steuerlegende) visuell geprüft; Teilzahlung → PARTIALLY_PAID; Admin-Rechnungsseiten 200
 - Offen (blockiert M6 nicht, siehe OFFENE-FRAGEN): USt-Regime-Bestätigung, echte Steuerlegende/Verkäuferdaten (Platzhalter)
+
+## 2026-08-16 – M6b: Shop-Checkout & Online-Zahlung (Test-Adapter, Branch m1-katalog-preis)
+- **Owner-Entscheidung:** Sofortkauf (Pfad B) mit **Test-Adapter**; echter Anbieter später nur ein weiterer Gateway-Adapter (KYC nach Gründung). DECISIONS #30.
+- **Migration 006** `payment_intents` + `payment_webhook_events` (§5.7)
+- **Gateway-Abstraktion** `Domain/Payment/Gateway` (`PaymentGateway`/`TestGateway`/`GatewayFactory`); HMAC-signierte Webhooks (`PAYMENT_WEBHOOK_SECRET`)
+- **`CheckoutService`:** Preis serverseitig neu berechnet (Client-Betrag wirkungslos), Order **PENDING_PAYMENT** + Positionen/Einheiten + Rechtserklärungen + `payment_intents` in EINER Transaktion; Pflicht-Zustimmungen serverseitig erzwungen
+- **`ShopWebhookService` (§5.7):** Signatur zuerst → Rohevent als Beleg → Betrag/Währung-Abgleich (Mismatch ⇒ Alarm-Audit, keine Buchung) → **Idempotenz doppelt** (UNIQUE(provider,event_ref) + `shop_paid_<order>`) → Rechnung ausstellen + Zahlung buchen (→ PAID) + Order **CONFIRMED** + Outbox-Mails
+- **Refactor:** Snapshot-Builder in `OrderSnapshot` extrahiert (geteilt Angebot/Checkout); `OrderRepo::createFromSnapshot` mit variablem Startzustand; Order-Achse aus `status_events`
+- **`cli/expire.php`:** PENDING_PAYMENT-Orders (nach `CHECKOUT_TTL_HOURS`) + abgelaufene Angebote → EXPIRED
+- **HTTP:** Checkout-Seite (Endpreis, Gastdaten, Pflicht-Checkboxen inkl. Widerruf-Erlöschen, „zahlungspflichtig bestellen"), simulierte Bezahlseite, Webhook-Endpunkt; Admin **Shop-Zahlungen** (Intents + Webhook-Events); Konfigurator-Button „Jetzt kaufen"
+- **DoD erfüllt:** derselbe Webhook zweimal ⇒ eine Zahlung + eine Rechnung; ungültige Signatur ⇒ 400 ohne Buchung; Betrags-/Währungs-Mismatch ⇒ Alarm-Audit, keine Buchung; Checkout ohne Checkboxen 422; Client-Preis wirkungslos; Expiry räumt PENDING_PAYMENT
+- **Tests:** `ShopCheckoutTest` (7) → **102 Tests grün**, `composer audit` sauber
+- **Verifiziert (Testmodus, echtes HTTP):** Konfigurator → Checkout → Bezahlseite → Zahlung simuliert → Order CONFIRMED, Rechnung 2026-000001 ISSUED, cur_payment PAID, 2 Mails versendet; Checkout CSP-/konsolensauber
+- **Nicht in diesem Build:** Lager/Bestand (DECISIONS #21) – offene Sub-Fragen unbeantwortet; echter Zahlungsanbieter (nach Gründung)
