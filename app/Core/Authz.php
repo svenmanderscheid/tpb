@@ -15,6 +15,7 @@ final class Authz
     public const MATRIX = [
         'tpb_manage_pricing'    => ['owner', 'admin'],
         'tpb_view_costs'        => ['owner', 'admin', 'finance'],
+        'tpb_manage_quotes'     => ['owner', 'admin', 'sales'],
         'tpb_manage_artwork'    => ['owner', 'admin', 'sales'],
         'tpb_manage_production' => ['owner', 'admin', 'production'],
         'tpb_issue_invoices'    => ['owner', 'finance'],

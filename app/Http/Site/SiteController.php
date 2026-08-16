@@ -10,6 +10,7 @@ use Tpb\Domain\Catalog\PlacementRepo;
 use Tpb\Domain\Catalog\ProductRepo;
 use Tpb\Domain\Catalog\TechniqueRepo;
 use Tpb\Domain\Catalog\VariantRepo;
+use Tpb\Domain\Legal\LegalDocRepo;
 
 /**
  * Öffentliche Konfigurator-Seiten (M2). Namespace Http/Site (public ist als
@@ -18,13 +19,41 @@ use Tpb\Domain\Catalog\VariantRepo;
 final class SiteController
 {
     /** @param array<string,string> $params */
+    public function home(array $params): void
+    {
+        Response::html(View::render('site/home', [
+            'products'  => $this->activeProducts(),
+            'legalDocs' => LegalDocRepo::allPublished('de'),
+        ], null));
+    }
+
+    /** @param array<string,string> $params */
     public function index(array $params): void
     {
-        $products = array_values(array_filter(
+        Response::html(View::render('site/index', ['products' => $this->activeProducts()], null));
+    }
+
+    /** @param array<string,string> $params */
+    public function legal(array $params): void
+    {
+        $docType = (string) ($params['docType'] ?? '');
+        $doc = $docType !== '' ? LegalDocRepo::published($docType, 'de') : null;
+        if ($docType !== '' && $doc === null) {
+            throw new HttpException(404, 'Rechtstext nicht gefunden.');
+        }
+        Response::html(View::render('site/legal', [
+            'docs' => LegalDocRepo::allPublished('de'),
+            'doc'  => $doc,
+        ], null));
+    }
+
+    /** @return array<int,array<string,mixed>> */
+    private function activeProducts(): array
+    {
+        return array_values(array_filter(
             ProductRepo::all(),
             static fn ($p) => $p['status'] === 'active'
         ));
-        Response::html(View::render('site/index', ['products' => $products], null));
     }
 
     /** @param array<string,string> $params */

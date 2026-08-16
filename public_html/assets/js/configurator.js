@@ -262,7 +262,10 @@ async function save() {
     state.draft = d.public_id;
     const url = '/konfigurator/' + product.public_id + '?draft=' + d.public_id;
     history.replaceState(null, '', url);
-    linkBox.replaceChildren(el('p', { class: 'ok-text' }, ['Gespeichert. Dein Link: ', el('a', { href: url, text: url })]));
+    linkBox.replaceChildren(
+      el('p', { class: 'ok-text' }, ['Gespeichert. Dein Link: ', el('a', { href: url, text: url })]),
+      el('p', { class: 'mt' }, [el('a', { class: 'btn', href: '/anfrage?config=' + encodeURIComponent(d.public_id), text: 'Angebot anfragen (Verein/Großbestellung)' })])
+    );
   } catch {
     linkBox.replaceChildren(el('p', { class: 'neg', text: 'Netzwerkfehler.' }));
   }

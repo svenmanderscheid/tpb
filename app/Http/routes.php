@@ -9,9 +9,12 @@ use Tpb\Http\Admin\FileController;
 use Tpb\Http\Admin\CostVersionController;
 use Tpb\Http\Admin\FinanceController;
 use Tpb\Http\Admin\PriceBookController;
+use Tpb\Http\Admin\QuoteController;
 use Tpb\Http\Admin\TechniqueController;
 use Tpb\Http\Api\ConfigController;
 use Tpb\Http\Api\PriceController;
+use Tpb\Http\Site\QuoteViewController;
+use Tpb\Http\Site\RequestController;
 use Tpb\Http\Site\SiteController;
 
 /**
@@ -19,11 +22,25 @@ use Tpb\Http\Site\SiteController;
  * Middleware-Tags: public, auth[:<capability>], csrf, rate:<bucket>.
  */
 return [
-    ['GET',  '/',              [DashboardController::class, 'root'],  ['public']],
+    // Öffentliche Basisseiten (M3)
+    ['GET',  '/',                      [SiteController::class, 'home'],  ['public']],
+    ['GET',  '/produkte',              [SiteController::class, 'index'], ['public']],
+    ['GET',  '/rechtliches',           [SiteController::class, 'legal'], ['public']],
+    ['GET',  '/rechtliches/{docType}', [SiteController::class, 'legal'], ['public']],
 
     // Öffentlicher Konfigurator (M2)
     ['GET',  '/konfigurator',                 [SiteController::class, 'index'],        ['public']],
     ['GET',  '/konfigurator/{publicId}',      [SiteController::class, 'configurator'], ['public']],
+
+    // Angebotsanfrage (M3, Pfad A – Clubs/größere Bestellungen)
+    ['GET',  '/anfrage',                       [RequestController::class, 'showForm'], ['public']],
+    ['POST', '/anfrage',                       [RequestController::class, 'submit'],   ['public', 'csrf', 'rate:quote_request']],
+
+    // Kundenansicht eines Angebots per Token (M3)
+    ['GET',  '/angebot/{publicId}',            [QuoteViewController::class, 'show'],    ['public']],
+    ['GET',  '/angebot/{publicId}/pdf',        [QuoteViewController::class, 'pdf'],     ['public']],
+    ['POST', '/angebot/{publicId}/annehmen',   [QuoteViewController::class, 'accept'],  ['public', 'csrf']],
+    ['POST', '/angebot/{publicId}/ablehnen',   [QuoteViewController::class, 'decline'], ['public', 'csrf']],
 
     // Auth
     ['GET',  '/admin/login',   [AuthController::class, 'showLogin'],  ['public']],
@@ -57,6 +74,13 @@ return [
     ['POST', '/admin/finanzen/gesellschafter',        [FinanceController::class, 'storePartner'],       ['auth:tpb_manage_finance', 'csrf']],
     ['POST', '/admin/finanzen/einlagen',              [FinanceController::class, 'storeContribution'],  ['auth:tpb_manage_finance', 'csrf']],
     ['POST', '/admin/finanzen/einlagen/loeschen',     [FinanceController::class, 'deleteContribution'], ['auth:tpb_manage_finance', 'csrf']],
+
+    // Angebote (M3) – Rechte: tpb_manage_quotes (owner/admin/sales)
+    ['GET',  '/admin/anfragen',                          [QuoteController::class, 'index'],       ['auth:tpb_manage_quotes']],
+    ['GET',  '/admin/angebote',                          [QuoteController::class, 'index'],       ['auth:tpb_manage_quotes']],
+    ['POST', '/admin/anfragen/{publicId}/angebot',       [QuoteController::class, 'createQuote'], ['auth:tpb_manage_quotes', 'csrf']],
+    ['GET',  '/admin/angebot/{publicId}',                [QuoteController::class, 'show'],        ['auth:tpb_manage_quotes']],
+    ['POST', '/admin/angebot/{publicId}/versenden',      [QuoteController::class, 'send'],        ['auth:tpb_manage_quotes', 'csrf']],
 
     // Katalog (M1) – Rechte: tpb_manage_pricing (owner/admin)
     ['GET',  '/admin/katalog',                                       [CatalogController::class, 'products'],      ['auth:tpb_manage_pricing']],

@@ -21,6 +21,9 @@ $activeNav = $nav ?? '';
         <div class="brand">The Printing Brothers</div>
         <nav class="mainnav">
             <a href="/admin" class="<?= $activeNav === 'dashboard' ? 'active' : '' ?>">Dashboard</a>
+            <?php if (Authz::can('tpb_manage_quotes')): ?>
+                <a href="/admin/anfragen" class="<?= $activeNav === 'quotes' ? 'active' : '' ?>">Angebote</a>
+            <?php endif; ?>
             <?php if (Authz::can('tpb_manage_pricing')): ?>
                 <a href="/admin/katalog" class="<?= $activeNav === 'catalog' ? 'active' : '' ?>">Katalog</a>
             <?php endif; ?>

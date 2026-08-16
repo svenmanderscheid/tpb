@@ -80,3 +80,17 @@
 - **Im Browser end-to-end verifiziert**: Formularaufbau, Live-Preis (10 Stück = 180,00 €), Upload, Speichern→Link, **Entwurf per Link wiederhergestellt** (Menge + Preis), keine Konsolen-/CSP-Fehler
 - Damit M2-DoD-Kern erfüllt: Reload/anderes Gerät stellt Entwurf her; Client-Preismanipulation wirkungslos (Server rechnet); Positionsdaten in mm; Upload-Pipeline vollständig
 - 72 Tests grün; alles auf `m1-katalog-preis`
+
+## 2026-08-16 – M3: Kunde & Angebot (Branch m1-katalog-preis)
+- **Fachliche Klärung (Owner):** Angebotsanfrage nur für **Clubs/Großbestellungen** (Pfad A); Einzelbestellungen zahlen sofort im Shop (Pfad B, M6b, blockiert auf Zahlungsanbieter). Siehe DECISIONS #22.
+- **Migration 004** `order_proof_production_invoice.sql` vollständig nach §5.5 (orders, order_items, order_item_units, order_terms_acceptance, artwork_versions, proofs, proof_approvals, production_jobs, production_events, invoices, invoice_lines, payments, payment_allocations, deposit_requests, print_jobs) – M3 nutzt Order-/Terms-Teil, Rest ab M4–M6
+- **Infrastruktur:** `NumberSequence` (§7-Referenz, lückenfrei), `States`+`Status` (alle Statusachsen §7, `status_events`), `PdfService` (dompdf **3.1.6** gehärtet §9: `isRemoteEnabled=false`, chroot, DejaVu), `AssetService::storeGenerated` (interne PDFs)
+- **Angebots-Domäne:** `CustomerRepo`, `LegalDocRepo`, `AccessTokenService` (SHA-256-Token, TTL/Widerruf), `QuoteService` (Snapshot einfrieren → `send` [Q-Nummer, PDF, Token, Outbox-Mail] → `accept`/`decline`), `QuoteRepo`, `OrderRepo` (Order aus Snapshot, Achse→CONFIRMED)
+- **Annahme idempotent:** genau eine Order je Angebot (FOR UPDATE + Statusprüfung); abgelaufenes Angebot wird EXPIRED gesetzt und abgewiesen; ungültiges/abgelaufenes Token abgewiesen
+- **HTTP öffentlich:** Startseite `/`, Produktübersicht `/produkte`, Rechtstexte `/rechtliches[/{typ}]`, Angebotsanfrage `/anfrage` (Kontakt + versionierte Consents), Kundenansicht `/angebot/{publicId}?t=` mit Annahme/Ablehnung + PDF-Stream; Konfigurator-Seitenleiste verlinkt „Angebot anfragen"
+- **HTTP Admin:** `/admin/anfragen` (offene Anfragen + Angebote), Anfrage→Angebot, Angebots-Detail, Versand; neue Capability `tpb_manage_quotes` (owner/admin/sales)
+- **Mail-Templates** (quote_sent, order_confirmed) über Outbox; **Seed** `--scenario=m3` (Platzhalter-Rechtstexte published, `quote_expiry_days=14`)
+- **Tests:** `QuoteFlowTest` (Idempotenz, Snapshot-Unveränderlichkeit gegen Preisbuchänderung, Token-/Ablauf-Abweisung); Capability-Matrix erweitert → **77 Tests grün**, `composer audit` sauber
+- **Browser-End-to-End verifiziert:** Anfrage → Admin erstellt Angebot Q-2026-000001 → Versand (Kundenlink + PDF, .eml in Outbox) → Kunde nimmt an → Order **ORD-2026-000001** (eine Order, Terms×4 protokolliert, Status-Events sauber), keine CSP-/Konsolenfehler
+- **DoD M3 erfüllt:** genau eine Order je Annahme; Preisbuchänderung nach Versand ändert das Angebot nicht (Snapshot); PDF = Snapshot-Inhalt; abgelaufenes/widerrufenes Token abgewiesen. Öffentliche Basisseiten stehen.
+- Offen (blockiert M3 nicht): echte Rechtstexte/Seller-Daten (Platzhalter), Anzahlungsregel (Default 0), SMTP (file-Driver). InkTracker-Vergleich in `docs/INKTRACKER-VERGLEICH.md`.
