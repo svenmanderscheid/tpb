@@ -10,6 +10,7 @@ use Tpb\Http\Admin\CostVersionController;
 use Tpb\Http\Admin\FinanceController;
 use Tpb\Http\Admin\OrderController;
 use Tpb\Http\Admin\PriceBookController;
+use Tpb\Http\Admin\ProductionController;
 use Tpb\Http\Admin\QuoteController;
 use Tpb\Http\Admin\TechniqueController;
 use Tpb\Http\Api\ConfigController;
@@ -17,6 +18,7 @@ use Tpb\Http\Api\PriceController;
 use Tpb\Http\Site\ProofViewController;
 use Tpb\Http\Site\QuoteViewController;
 use Tpb\Http\Site\RequestController;
+use Tpb\Http\Site\ScanController;
 use Tpb\Http\Site\SiteController;
 
 /**
@@ -49,6 +51,9 @@ return [
     ['GET',  '/proof/{publicId}/pdf',          [ProofViewController::class, 'pdf'],     ['public']],
     ['POST', '/proof/{publicId}/freigeben',    [ProofViewController::class, 'approve'], ['public', 'csrf']],
     ['POST', '/proof/{publicId}/aenderung',    [ProofViewController::class, 'changes'], ['public', 'csrf']],
+
+    // Interne Job-Scan-Ansicht per QR-Token (M5)
+    ['GET',  '/scan/{publicId}',               [ScanController::class, 'show'],         ['public']],
 
     // Auth
     ['GET',  '/admin/login',   [AuthController::class, 'showLogin'],  ['public']],
@@ -95,6 +100,16 @@ return [
     ['GET',  '/admin/auftrag/{publicId}',                [OrderController::class, 'show'],          ['auth:tpb_manage_artwork']],
     ['POST', '/admin/auftrag/{publicId}/artwork',        [OrderController::class, 'uploadArtwork'], ['auth:tpb_manage_artwork', 'csrf', 'rate:upload']],
     ['POST', '/admin/auftrag/{publicId}/proof',          [OrderController::class, 'createProof'],   ['auth:tpb_manage_artwork', 'csrf']],
+
+    // Produktion & Etikett (M5) – Rechte: tpb_manage_production (owner/admin/production)
+    ['GET',  '/admin/produktion',                        [ProductionController::class, 'queue'],         ['auth:tpb_manage_production']],
+    ['POST', '/admin/auftrag/{publicId}/produktion',     [ProductionController::class, 'createForOrder'], ['auth:tpb_manage_production', 'csrf']],
+    ['GET',  '/admin/job/{publicId}',                    [ProductionController::class, 'job'],            ['auth:tpb_manage_production']],
+    ['POST', '/admin/job/{publicId}/freigeben',          [ProductionController::class, 'release'],        ['auth:tpb_manage_production', 'csrf']],
+    ['POST', '/admin/job/{publicId}/aktion',             [ProductionController::class, 'advance'],        ['auth:tpb_manage_production', 'csrf']],
+    ['POST', '/admin/job/{publicId}/menge',              [ProductionController::class, 'quantity'],       ['auth:tpb_manage_production', 'csrf']],
+    ['POST', '/admin/job/{publicId}/etikett',            [ProductionController::class, 'label'],          ['auth:tpb_manage_production', 'csrf']],
+    ['POST', '/admin/job/{publicId}/etikett/neu',        [ProductionController::class, 'reprint'],        ['auth:tpb_manage_production', 'csrf']],
 
     // Katalog (M1) – Rechte: tpb_manage_pricing (owner/admin)
     ['GET',  '/admin/katalog',                                       [CatalogController::class, 'products'],      ['auth:tpb_manage_pricing']],

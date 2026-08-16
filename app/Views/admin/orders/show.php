@@ -95,6 +95,15 @@ $proofLabels = ['draft' => 'Entwurf', 'sent' => 'Versendet', 'approved' => 'Frei
         </div>
 
         <div class="card">
+            <h2>Produktion</h2>
+            <form method="post" action="/admin/auftrag/<?= e((string) $order['public_id']) ?>/produktion">
+                <?= Csrf::field() ?>
+                <button type="submit" class="btn secondary">Produktionsjobs anlegen</button>
+            </form>
+            <p class="muted mt"><a href="/admin/produktion">Zur Produktionswarteschlange →</a></p>
+        </div>
+
+        <div class="card">
             <h2>Proof senden</h2>
             <?php if ($canProof): ?>
                 <form method="post" action="/admin/auftrag/<?= e((string) $order['public_id']) ?>/proof">

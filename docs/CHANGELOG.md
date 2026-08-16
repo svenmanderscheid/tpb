@@ -107,3 +107,20 @@
 - **Tests:** `ProofFlowTest` (Freigabe→LOCKED mit protokollierter Freigabe; neue Version löst ab + alter Link abgewiesen; LOCKED nicht erneut proofbar; ungültiges Token) → **81 Tests grün**, `composer audit` sauber
 - **HTTP end-to-end verifiziert (curl, echte CSRF/Session/Token):** Kunden-Proofansicht → Freigabe → Auftrag LOCKED, Freigabe protokolliert; Admin-Auftragsseiten 200 mit „gesperrt"-Badge + PDF-Links; Proof-Mail in der Outbox gerendert
 - Offen (blockiert M4 nicht): gerasterte Motivvorschau im Proof-PDF (derzeit Maßangaben); Produktionsjobs (M5) entstehen aus LOCKED-Aufträgen
+
+## 2026-08-16 – M5: Produktion & Etikett (Branch m1-katalog-preis)
+- **Whitelist-Libs (§1.1):** `chillerlan/php-qrcode` 6.0.1, `picqer/php-barcode-generator` 3.2.4 (composer audit sauber). QR/Code128 als lokale PNG-Data-URIs (DECISIONS #26)
+- **Produktions-Domäne:** `JobRepo` (ein Job je order_item, Nummern `JOB-…`), `ProductionService`
+  (Job-Anlage, Freigabe-**Gate** §7.3, Statusfluss BLOCKED→READY→IN_PROGRESS→QUALITY_CHECK→DONE inkl. REWORK/SCRAPPED,
+  Mengen-/Ausschusserfassung **idempotent** über `production_events.idem_key`)
+- **Etikett:** `Label\Barcode` (QR + Code128), `Label\LabelService` (Jobetikett-PDF 62×100 mm via `PdfService::renderLabel`,
+  `print_jobs`-Protokoll, **Neudruck nur mit Grund**), GD-Testrender in 203/300 dpi (`cli/label_test.php`)
+- **HTTP Admin:** `/admin/produktion` (Warteschlange), `/admin/job/{publicId}` (Statusbuttons, Mengen, Etikett/Neudruck),
+  „Produktionsjobs anlegen" am Auftrag; Recht `tpb_manage_production`; Nav „Produktion"
+- **HTTP Werkstatt:** `/scan/{jobPublicId}?t=` (QR-Token, read-only Job-Statuskarte)
+- **DoD erfüllt:** Job ohne erfülltes Gate bleibt BLOCKED (Artwork nicht LOCKED → Freigabe verweigert); doppelter
+  Mengen-POST mit gleichem `idem_key` bucht nicht doppelt; Etikett in 203/300 dpi lesbar mit scanbarem QR/Code128;
+  Neudruck nur mit Grund (`reprint_of_id` + `reprint_reason`); Standardartikel gelten am Gate als vorab freigegeben
+- **Tests:** `ProductionFlowTest` (3) → **84 Tests grün**, `composer audit` sauber
+- **Verifiziert:** CLI-Etikett-Render (JOB-2026-000001, 496×799 / 732×1181 px) visuell geprüft; Admin-Produktionsseiten
+  200 (READY-Badge, Start-Button); Scan-Route weist ungültiges Token mit 404 ab
