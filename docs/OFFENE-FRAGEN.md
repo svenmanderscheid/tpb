@@ -13,11 +13,13 @@ Claude Code liest diese Datei vor jedem Meilenstein und trägt eigene Fragen unt
 
 ## Vor M3 – Angebot & Auftrag
 
-- [ ] Anzahlungsregel (ab Auftragswert X → Y %)
-- [ ] Angebots-Gültigkeitsdauer in Tagen (Default `valid_until`)
-- [ ] Rechtstexte v1 beauftragt (AGB, Datenschutz, Widerruf/Personalisierung, Datei-Erklärungen) – Datum:
+> **Geklärt (Owner 2026-08-16):** Die **Angebotsanfrage ist nur für Clubs / größere Bestellungen**. Einzelbestellungen sieht der Kunde sofort im Konfigurator und **zahlt sofort** (Pfad B, Shop-Checkout M6b). Siehe DECISIONS #22. M3 baut ausschließlich den Angebots-/Auftragsweg (Pfad A).
+
+- [ ] Anzahlungsregel (ab Auftragswert X → Y %) — **M3-Default bis dahin: `deposit_required_cents = 0`** (keine Anzahlungsaufforderung); sobald die Regel vorliegt, greift der `deposit_requests`-Zweig automatisch.
+- [ ] Angebots-Gültigkeitsdauer in Tagen (Default `valid_until`) — **M3-Platzhalter: 14 Tage** (`business_settings.reminder.quote_expiry_days`), jederzeit im Admin änderbar; kein erfundener Fachwert, nur ein sichtbarer Default.
+- [ ] Rechtstexte v1 beauftragt (AGB, Datenschutz, Widerruf/Personalisierung, Datei-Erklärungen) – Datum: __ — **M3 nutzt bis dahin markierte Platzhalter** (`v0-PLATZHALTER`, DECISIONS #25).
 - [ ] Anzahlungs-Wortlaut („keine Rechnung“-Formulierung, Fälligkeit) – Fiduciaire-Freigabe (Konzept 20.2)
-- [ ] SMTP-Zugang (erst ab M3-Abnahme; bis dahin `MAIL_DRIVER=file`)
+- [ ] SMTP-Zugang (erst ab M3-Abnahme; bis dahin `MAIL_DRIVER=file`) — **lokal aktiv `MAIL_DRIVER=file`**, Angebots-/Auftragsmails landen als `.eml` in `private/tpb/outbox-mails/`.
 
 ## Vor M6b – Shop & Zahlung
 
@@ -40,6 +42,12 @@ Claude Code liest diese Datei vor jedem Meilenstein und trägt eigene Fragen unt
 - [ ] Gründungs-Checkliste Konzept 20.7 abgearbeitet (Rechtsform, Autorisation, AED/57bis, CCSS, Geschäftskonto, Betriebshaftpflicht)
 - [ ] Seller-Snapshot-Daten eingetragen (Konzept 12.1) – **blockiert Go-live**
 - [ ] Plattform-Entscheidung nach Konzept 17.2 formell dokumentiert (beide Gründer, Datum)
+
+## InkTracker-Vergleich (Owner-Wunsch 2026-08-16, Details in docs/INKTRACKER-VERGLEICH.md)
+
+- [ ] **Welcher konkrete InkTracker-Screen** ist vorbildlich? Belegbar ist ein Preis-Wizard, **kein** grafischer Designer (TPB ist hier bereits überlegen). Antwort steuert, wie stark wir die M2-Preis-Transparenz ausbauen.
+- [ ] **Vereins-/Broker-Portal** (wiederkehrende Kunden sehen eigene Angebote/Aufträge) gewünscht? (Adaption #6, M8+)
+- [ ] **Lieferanten-Preisimport** (Adaption #4): welche LU/EU-Lieferanten, welches CSV-Exportformat? → speist neue `cost_version` mit Diff-Vorschau.
 
 ## Von Claude Code eingetragene Fragen
 

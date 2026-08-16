@@ -39,6 +39,7 @@ $scenarios = [
 if ($scenario === null) {
     echo "Verfügbare Szenarien:\n";
     echo "  --scenario=test  Testobjekt + veröffentlichtes Preisbuch/Kostenversion (M1/M2)\n";
+    echo "  --scenario=m3    Platzhalter-Rechtstexte (published) + Angebots-Gültigkeitsdauer (M3)\n";
     foreach ($scenarios as $n => $desc) {
         echo "  --scenario={$n}  {$desc}\n";
     }
@@ -47,6 +48,11 @@ if ($scenario === null) {
 
 if ($scenario === 'test') {
     seed_test_object();
+    exit(0);
+}
+
+if ($scenario === 'm3') {
+    seed_m3_basics();
     exit(0);
 }
 
@@ -129,4 +135,52 @@ function seed_test_object(): void
     echo "  Technik           : FLEX\n";
     echo "  Preisbuch         : v{$bookVersion} (published)\n";
     echo "  Kostenversion     : v{$costVersion} (published)\n";
+}
+
+/**
+ * M3-Grundlagen: veröffentlichte PLATZHALTER-Rechtstexte (DECISIONS #25) und die
+ * Angebots-Gültigkeitsdauer (business_settings). Kein echter Rechtstext – bewusst
+ * als Platzhalter markiert, damit Consent-/Snapshot-Mechanik testbar ist. Idempotent.
+ */
+function seed_m3_basics(): void
+{
+    $now = \Tpb\Core\Clock::nowUtcSeconds();
+
+    $docs = [
+        'agb'         => 'Allgemeine Geschäftsbedingungen',
+        'datenschutz' => 'Datenschutzerklärung',
+        'widerruf'    => 'Widerrufsbelehrung und Erlöschen des Widerrufsrechts bei personalisierter Ware',
+        'datei'       => 'Erklärung zu Druckdaten und Nutzungsrechten',
+    ];
+
+    foreach ($docs as $type => $title) {
+        $exists = \Tpb\Core\Db::run(
+            "SELECT id FROM legal_document_versions WHERE doc_type = ? AND language = 'de' AND status = 'published' LIMIT 1",
+            [$type]
+        )->fetch();
+        if ($exists !== false) {
+            echo "Rechtstext '{$type}' (published) existiert bereits – übersprungen.\n";
+            continue;
+        }
+        $content = "# {$title}\n\n"
+            . "PLATZHALTER – juristisch geprüfte Fassung ausstehend (siehe docs/OFFENE-FRAGEN.md).\n\n"
+            . "Dieser Text dient ausschließlich dazu, den Zustimmungs- und Snapshot-Mechanismus "
+            . "technisch zu ermöglichen. Er stellt KEINE rechtsverbindliche Erklärung dar.";
+        \Tpb\Core\Db::run(
+            "INSERT INTO legal_document_versions
+                (doc_type, language, version, content, content_hash, status, valid_from, approved_at, created_at)
+             VALUES (?, 'de', 'v0-PLATZHALTER', ?, ?, 'published', ?, ?, ?)",
+            [$type, $content, hash('sha256', $content), $now, $now, $now]
+        );
+        echo "Rechtstext '{$type}' (v0-PLATZHALTER, published) angelegt.\n";
+    }
+
+    // Angebots-Gültigkeitsdauer (Platzhalter-Default 14 Tage).
+    \Tpb\Core\Db::run(
+        "INSERT INTO business_settings (setting_key, value_json, updated_at)
+         VALUES ('reminder.quote_expiry_days', '14', ?)
+         ON DUPLICATE KEY UPDATE value_json = VALUES(value_json), updated_at = VALUES(updated_at)",
+        [$now]
+    );
+    echo "business_settings.reminder.quote_expiry_days = 14 gesetzt.\n";
 }

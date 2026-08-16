@@ -96,6 +96,56 @@ final class AssetService
         ];
     }
 
+    /**
+     * Speichert einen intern erzeugten Dokument-Binärstring (Angebots-/Rechnungs-PDF,
+     * kanonisches JSON) als Asset. Keine Quarantäne (nicht nutzergeneriert), security_status=clean.
+     *
+     * @return array<string,mixed>  Der angelegte Asset-Datensatz (inkl. id, public_id).
+     */
+    public static function storeGenerated(
+        string $bytes,
+        string $originalName,
+        string $mime,
+        string $kind,
+        string $retentionClass,
+        ?int $userId = null,
+        ?string $ownerType = null,
+        ?int $ownerId = null
+    ): array {
+        $ulid = Ulid::generate();
+        $sha256 = hash('sha256', $bytes);
+        $ownerSeg = $ownerType !== null ? "{$ownerType}-" . ($ownerId ?? 0) : 'system';
+        $storageKey = "documents/{$ownerSeg}/{$ulid}/" . self::sanitizeName($originalName);
+        PrivateStorage::put($storageKey, $bytes);
+
+        $now = Clock::nowUtcSeconds();
+        Db::run(
+            'INSERT INTO assets
+                (public_id, owner_type, owner_id, kind, original_name, mime, size_bytes,
+                 sha256, storage_key, security_status, retention_class, created_by, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [
+                $ulid, $ownerType, $ownerId, $kind, self::sanitizeName($originalName), $mime, strlen($bytes),
+                $sha256, $storageKey, 'clean', $retentionClass, $userId, $now,
+            ]
+        );
+        $id = (int) Db::pdo()->lastInsertId();
+
+        Audit::log('asset', $ulid, 'asset.generated', [
+            'actor_user_id' => $userId,
+            'metadata'      => ['mime' => $mime, 'size' => strlen($bytes), 'kind' => $kind, 'sha256' => $sha256],
+        ]);
+
+        return [
+            'id'         => $id,
+            'public_id'  => $ulid,
+            'sha256'     => $sha256,
+            'storage_key' => $storageKey,
+            'mime'       => $mime,
+            'size_bytes' => strlen($bytes),
+        ];
+    }
+
     private static function assertUploadOk(int $error): void
     {
         if ($error === UPLOAD_ERR_OK) {
