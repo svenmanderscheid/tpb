@@ -8,11 +8,13 @@ use Tpb\Http\Admin\DashboardController;
 use Tpb\Http\Admin\FileController;
 use Tpb\Http\Admin\CostVersionController;
 use Tpb\Http\Admin\FinanceController;
+use Tpb\Http\Admin\OrderController;
 use Tpb\Http\Admin\PriceBookController;
 use Tpb\Http\Admin\QuoteController;
 use Tpb\Http\Admin\TechniqueController;
 use Tpb\Http\Api\ConfigController;
 use Tpb\Http\Api\PriceController;
+use Tpb\Http\Site\ProofViewController;
 use Tpb\Http\Site\QuoteViewController;
 use Tpb\Http\Site\RequestController;
 use Tpb\Http\Site\SiteController;
@@ -41,6 +43,12 @@ return [
     ['GET',  '/angebot/{publicId}/pdf',        [QuoteViewController::class, 'pdf'],     ['public']],
     ['POST', '/angebot/{publicId}/annehmen',   [QuoteViewController::class, 'accept'],  ['public', 'csrf']],
     ['POST', '/angebot/{publicId}/ablehnen',   [QuoteViewController::class, 'decline'], ['public', 'csrf']],
+
+    // Kunden-Proof per Token (M4)
+    ['GET',  '/proof/{publicId}',              [ProofViewController::class, 'show'],    ['public']],
+    ['GET',  '/proof/{publicId}/pdf',          [ProofViewController::class, 'pdf'],     ['public']],
+    ['POST', '/proof/{publicId}/freigeben',    [ProofViewController::class, 'approve'], ['public', 'csrf']],
+    ['POST', '/proof/{publicId}/aenderung',    [ProofViewController::class, 'changes'], ['public', 'csrf']],
 
     // Auth
     ['GET',  '/admin/login',   [AuthController::class, 'showLogin'],  ['public']],
@@ -81,6 +89,12 @@ return [
     ['POST', '/admin/anfragen/{publicId}/angebot',       [QuoteController::class, 'createQuote'], ['auth:tpb_manage_quotes', 'csrf']],
     ['GET',  '/admin/angebot/{publicId}',                [QuoteController::class, 'show'],        ['auth:tpb_manage_quotes']],
     ['POST', '/admin/angebot/{publicId}/versenden',      [QuoteController::class, 'send'],        ['auth:tpb_manage_quotes', 'csrf']],
+
+    // Aufträge & Proof (M4) – Rechte: tpb_manage_artwork (owner/admin/sales)
+    ['GET',  '/admin/auftraege',                         [OrderController::class, 'index'],         ['auth:tpb_manage_artwork']],
+    ['GET',  '/admin/auftrag/{publicId}',                [OrderController::class, 'show'],          ['auth:tpb_manage_artwork']],
+    ['POST', '/admin/auftrag/{publicId}/artwork',        [OrderController::class, 'uploadArtwork'], ['auth:tpb_manage_artwork', 'csrf', 'rate:upload']],
+    ['POST', '/admin/auftrag/{publicId}/proof',          [OrderController::class, 'createProof'],   ['auth:tpb_manage_artwork', 'csrf']],
 
     // Katalog (M1) – Rechte: tpb_manage_pricing (owner/admin)
     ['GET',  '/admin/katalog',                                       [CatalogController::class, 'products'],      ['auth:tpb_manage_pricing']],

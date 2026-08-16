@@ -94,3 +94,16 @@
 - **Browser-End-to-End verifiziert:** Anfrage → Admin erstellt Angebot Q-2026-000001 → Versand (Kundenlink + PDF, .eml in Outbox) → Kunde nimmt an → Order **ORD-2026-000001** (eine Order, Terms×4 protokolliert, Status-Events sauber), keine CSP-/Konsolenfehler
 - **DoD M3 erfüllt:** genau eine Order je Annahme; Preisbuchänderung nach Versand ändert das Angebot nicht (Snapshot); PDF = Snapshot-Inhalt; abgelaufenes/widerrufenes Token abgewiesen. Öffentliche Basisseiten stehen.
 - Offen (blockiert M3 nicht): echte Rechtstexte/Seller-Daten (Platzhalter), Anzahlungsregel (Default 0), SMTP (file-Driver). InkTracker-Vergleich in `docs/INKTRACKER-VERGLEICH.md`.
+
+## 2026-08-16 – M4: Proof & Freigabe (Branch m1-katalog-preis)
+- **Proof-Domäne:** `ArtworkRepo` (versionierte finale Druckdateien je Auftrag), `ProofRepo`, `ProofService`
+  (`addArtwork` → MISSING→UPLOADED; `createAndSend` → Proof-PDF, Token, Outbox-Mail, Artwork-Achse →PROOF_SENT;
+  `approve`/`requestChanges` per Token)
+- **Nur konfigurierte Positionen** durchlaufen den Proof; Standardartikel starten bereits bei LOCKED (v1.4, in `OrderRepo::createFromQuote`)
+- **DoD erfüllt:** Freigabe referenziert exakt eine Proof-Version (Token an `proof_id` gebunden, PDF-SHA-256 im Audit); eine neue Version setzt die alte auf `superseded` und macht den alten Link ungültig (neue Freigabe nötig); Freigabe/Änderung mit Zeit/Actor/Token in `proof_approvals`; Freigabe sperrt Artwork (LOCKED)
+- **HTTP Admin:** `/admin/auftraege` (Liste), `/admin/auftrag/{publicId}` (Positionen, Artwork-Versionen, Proofs, Upload, „Proof erstellen & versenden"); Recht `tpb_manage_artwork`; Nav „Aufträge"
+- **HTTP Kunde:** `/proof/{orderPublicId}?t=` mit Freigabe/Änderung + Proof-PDF-Stream (token-gebunden an die aktive Version)
+- **Proof-PDF-View** (Produktionsspezifikation: Positionen + Maße in mm aus dem Config-Snapshot); Mail-Template `proof_sent`
+- **Tests:** `ProofFlowTest` (Freigabe→LOCKED mit protokollierter Freigabe; neue Version löst ab + alter Link abgewiesen; LOCKED nicht erneut proofbar; ungültiges Token) → **81 Tests grün**, `composer audit` sauber
+- **HTTP end-to-end verifiziert (curl, echte CSRF/Session/Token):** Kunden-Proofansicht → Freigabe → Auftrag LOCKED, Freigabe protokolliert; Admin-Auftragsseiten 200 mit „gesperrt"-Badge + PDF-Links; Proof-Mail in der Outbox gerendert
+- Offen (blockiert M4 nicht): gerasterte Motivvorschau im Proof-PDF (derzeit Maßangaben); Produktionsjobs (M5) entstehen aus LOCKED-Aufträgen

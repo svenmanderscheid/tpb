@@ -31,6 +31,35 @@ final class OrderRepo
         return $row === false ? null : $row;
     }
 
+    /** @return array<int,array<string,mixed>> Alle Positionen eines Auftrags. */
+    public static function items(int $orderId): array
+    {
+        return Db::run('SELECT * FROM order_items WHERE order_id = ? ORDER BY pos_no ASC', [$orderId])->fetchAll();
+    }
+
+    /** @return array<int,array<string,mixed>> Nur konfigurierte Positionen (mit config_snapshot, M4-Proof). */
+    public static function configuredItems(int $orderId): array
+    {
+        return Db::run(
+            'SELECT * FROM order_items WHERE order_id = ? AND config_snapshot_json IS NOT NULL ORDER BY pos_no ASC',
+            [$orderId]
+        )->fetchAll();
+    }
+
+    /**
+     * Auftragsliste fürs Backoffice (neueste zuerst).
+     * @return array<int,array<string,mixed>>
+     */
+    public static function listForAdmin(): array
+    {
+        return Db::run(
+            'SELECT o.id, o.public_id, o.order_number, o.total_cents, o.currency, o.cur_artwork, o.cur_production, o.ordered_at,
+                    c.company_name, c.first_name, c.last_name
+             FROM orders o JOIN customers c ON c.id = o.customer_id
+             ORDER BY o.id DESC LIMIT 200'
+        )->fetchAll();
+    }
+
     /**
      * Erzeugt Order + Items + Units aus dem Quote-Snapshot. Order-Achse startet
      * bei CONFIRMED (Pfad A, §7). Artwork-Cache: MISSING falls konfigurierte Position

@@ -57,6 +57,29 @@ final class MailTemplates
         return ['to' => (string) $p['to_email'], 'subject' => $subject, 'text' => $text, 'html' => $html];
     }
 
+    /** @param array<string,mixed> $p */
+    public static function proofSent(array $p): array
+    {
+        $url = self::base() . '/proof/' . rawurlencode((string) $p['order_public_id']) . '?t=' . rawurlencode((string) $p['token']);
+        $number = (string) $p['order_number'];
+        $name = trim((string) ($p['to_name'] ?? '')) ?: 'Kundin/Kunde';
+        $version = (string) ($p['proof_version'] ?? '');
+
+        $subject = "Druckfreigabe (Proof v{$version}) zu Auftrag {$number}";
+        $text = "Hallo {$name},\n\n"
+            . "zu Ihrem Auftrag {$number} liegt der Proof (Version {$version}) zur Freigabe bereit.\n\n"
+            . "Bitte prüfen und freigeben oder Änderungen anfordern:\n{$url}\n\n"
+            . "Erst nach Ihrer Freigabe geht der Auftrag in die Produktion.\n\n"
+            . "Herzliche Grüße\nThe Printing Brothers";
+        $html = '<p>Hallo ' . e($name) . ',</p>'
+            . '<p>zu Ihrem Auftrag <strong>' . e($number) . '</strong> liegt der Proof (Version ' . e($version) . ') zur Freigabe bereit.</p>'
+            . '<p><a href="' . e($url) . '">Proof prüfen, freigeben oder Änderungen anfordern</a></p>'
+            . '<p>Erst nach Ihrer Freigabe geht der Auftrag in die Produktion.</p>'
+            . '<p>Herzliche Grüße<br>The Printing Brothers</p>';
+
+        return ['to' => (string) $p['to_email'], 'subject' => $subject, 'text' => $text, 'html' => $html];
+    }
+
     private static function base(): string
     {
         return rtrim((string) (Env::get('APP_URL', 'http://tpb.local') ?? 'http://tpb.local'), '/');
