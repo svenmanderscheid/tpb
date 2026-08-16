@@ -140,3 +140,12 @@ th { color: var(--muted); font-weight: 600; }
 .inline-form { display: inline; }
 .link-danger { color: var(--danger); background: none; border: none; cursor: pointer; font-size: 0.85rem; padding: 0; }
 .link-danger:hover { text-decoration: underline; }
+
+/* Konfigurator */
+.cfg-grid { display: grid; grid-template-columns: 1fr 320px; gap: 1.25rem; align-items: start; }
+@media (max-width: 860px) { .cfg-grid { grid-template-columns: 1fr; } }
+.cfg-side { position: sticky; top: 1rem; display: flex; flex-direction: column; gap: 1.25rem; }
+.price-total { font-size: 1.8rem; font-weight: 700; }
+.check { display: inline-flex; align-items: center; gap: 0.5rem; }
+.layer.card-2 { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 0.9rem; margin-bottom: 0.75rem; }
+.ok-text { color: var(--ok); font-size: 0.9rem; word-break: break-all; }

@@ -72,3 +72,11 @@
 - **Konfigurations-API** (`Http/Api`): `POST /api/config/save` (serverseitige Preisberechnung + Persistenz), `GET /api/config/{publicId}` (Round-trip), `POST /api/config/upload` (Gast-Logo-Upload über dieselbe Preflight-/Quarantäne-Pipeline); `/api/price` nutzt jetzt denselben Mapper
 - Tests: `ConfigSaveTest` (Ableitung Positionen/Motive, Preis→Speichern→Laden, Update ersetzt Positionen) → **72 Tests grün**; End-to-End über Apache verifiziert (Upload→Save 242,50 €→Load)
 - **Offen für M2**: öffentliche Konfigurator-Seite (Vanilla-JS-UI) und Standardprodukt-Seite
+
+## 2026-08-15 – M2: Öffentlicher Konfigurator (Vanilla-JS)
+- **`Http/Site/SiteController`** + Views: `GET /konfigurator` (Produktliste), `GET /konfigurator/{publicId}` (Konfigurator); Produkt-/Varianten-/Placement-/Technik-Daten als JSON-Datenblock eingebettet
+- **`assets/js/configurator.js`** (CSP-konform, keine Inline-Skripte, kein CDN): Größenmatrix, Technikwahl, Design-Layer mit Logo-Upload + Feinjustierung in mm, Personalisierungsliste, Express; **debounced Live-Preis über `/api/price`**; Entwurf speichern (`/api/config/save`) mit teilbarem Link; Entwurf laden über `?draft=<public_id>`; Standardprodukte ohne Design/Technik
+- Konfigurator-Layout im CSS (sticky Preis-Panel), gemischtes Admin/Site-Styling wiederverwendet
+- **Im Browser end-to-end verifiziert**: Formularaufbau, Live-Preis (10 Stück = 180,00 €), Upload, Speichern→Link, **Entwurf per Link wiederhergestellt** (Menge + Preis), keine Konsolen-/CSP-Fehler
+- Damit M2-DoD-Kern erfüllt: Reload/anderes Gerät stellt Entwurf her; Client-Preismanipulation wirkungslos (Server rechnet); Positionsdaten in mm; Upload-Pipeline vollständig
+- 72 Tests grün; alles auf `m1-katalog-preis`

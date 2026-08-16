@@ -12,6 +12,7 @@ use Tpb\Http\Admin\PriceBookController;
 use Tpb\Http\Admin\TechniqueController;
 use Tpb\Http\Api\ConfigController;
 use Tpb\Http\Api\PriceController;
+use Tpb\Http\Site\SiteController;
 
 /**
  * Routen-Tabelle (§4): [METHOD, PATTERN, [Controller, 'action'], [middleware-tags]].
@@ -19,6 +20,10 @@ use Tpb\Http\Api\PriceController;
  */
 return [
     ['GET',  '/',              [DashboardController::class, 'root'],  ['public']],
+
+    // Öffentlicher Konfigurator (M2)
+    ['GET',  '/konfigurator',                 [SiteController::class, 'index'],        ['public']],
+    ['GET',  '/konfigurator/{publicId}',      [SiteController::class, 'configurator'], ['public']],
 
     // Auth
     ['GET',  '/admin/login',   [AuthController::class, 'showLogin'],  ['public']],
