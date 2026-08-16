@@ -51,6 +51,9 @@ $activeNav = $nav ?? '';
             <?php if (Authz::can('tpb_view_costs')): ?>
                 <a href="/admin/zahlungen" class="<?= $activeNav === 'shoppay' ? 'active' : '' ?>">Shop-Zahlungen</a>
             <?php endif; ?>
+            <?php if (Authz::can('tpb_manage_finance')): ?>
+                <a href="/admin/bank" class="<?= $activeNav === 'bank' ? 'active' : '' ?>">Bank</a>
+            <?php endif; ?>
             <?php if (Authz::can('tpb_view_costs')): ?>
                 <a href="/admin/finanzen" class="<?= $activeNav === 'finance' ? 'active' : '' ?>">Finanzen</a>
             <?php endif; ?>

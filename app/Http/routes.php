@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 use Tpb\Http\Admin\AssetController;
 use Tpb\Http\Admin\AuthController;
+use Tpb\Http\Admin\BankController;
 use Tpb\Http\Admin\CatalogController;
 use Tpb\Http\Admin\DashboardController;
 use Tpb\Http\Admin\FileController;
@@ -156,6 +157,13 @@ return [
 
     // Shop-Zahlungen (M6b) – Lesen: tpb_view_costs
     ['GET',  '/admin/zahlungen',                         [ShopController::class, 'payments'],           ['auth:tpb_view_costs']],
+
+    // Bankabgleich (M8) – Recht: tpb_manage_finance
+    ['GET',  '/admin/bank',                              [BankController::class, 'index'],              ['auth:tpb_manage_finance']],
+    ['POST', '/admin/bank/import',                       [BankController::class, 'import'],             ['auth:tpb_manage_finance', 'csrf', 'rate:upload']],
+    ['POST', '/admin/bank/{id}/zahlung',                 [BankController::class, 'confirmPayment'],      ['auth:tpb_manage_finance', 'csrf']],
+    ['POST', '/admin/bank/{id}/ausgabe',                 [BankController::class, 'confirmExpense'],      ['auth:tpb_manage_finance', 'csrf']],
+    ['POST', '/admin/bank/{id}/ignorieren',              [BankController::class, 'ignore'],             ['auth:tpb_manage_finance', 'csrf']],
 
     // Lager (M6c) – Recht: tpb_manage_pricing
     ['GET',  '/admin/lager',                             [StockController::class, 'index'],             ['auth:tpb_manage_pricing']],

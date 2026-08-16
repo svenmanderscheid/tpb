@@ -182,3 +182,16 @@
 - **Tests:** `TotpTest` (RFC-Vektoren), `MfaServiceTest`, `HealthCheckTest` → **124 Tests grün**, `composer audit` sauber
 - **Verifiziert:** `/health` 200 ok; healthcheck erkennt veraltetes Backup + reiht Alarm-Mail; retention Trockenlauf; MFA-Seiten 200, QR-Endpunkt liefert `image/png`
 - **Noch offen für M7-Abschluss (beim Deployment, DECISIONS #33):** sudo-Modus, Checkout-Rechtsprüfung Kap. 12, Backup/Restore-Test-Doku, Seeds-End-to-End, konkrete Hostinger-Schritte
+
+## 2026-08-16 – M8: Zahlungsabgleich & Forderungen (Branch m1-katalog-preis)
+- **Bankimport** (`Domain/Bank`): **CSV** (Standardformat) + **CAMT.053** (ISO 20022). Doppelter Duplikatschutz: `file_sha256` (ganze Datei) + `dedupe_hash` je Zeile → **identische Datei = 0 neue Zeilen**
+- **Matching** (`Matcher`): Rechnungs-/Auftragsnummer im Verwendungszweck/EndToEndId ⇒ hoch; Betrag exakt + Namensähnlichkeit ⇒ niedrig. **Nie automatisch buchen**
+- **Bestätigung** (`BankReconciliation`): Eingangszeile → Payment + Allocation + abgeleitete Zahlungsachse in **einer Transaktion**; Ausgangszeile → Ausgabe; `match_status=confirmed`/`ignored`
+- **Mahnwesen** (`DunningService`, `cli/reminders.php`): Zahlungserinnerung Stufe 1 (überfällige Rechnungen) + Wiedervorlage (ablaufende Angebote), **je Stufe genau einmal** (`reminders_sent` UNIQUE)
+- **Dashboard „Heute"** (`TodayList`): ablaufende Angebote, wartende Proofs, überfällige Rechnungen, offene Bankzeilen, blockierte Jobs
+- **HTTP:** `/admin/bank` (Import + offene Zeilen mit Vorschlag/Bestätigung/Ausgabe/Ignorieren), Dashboard-Umbau; Nav „Bank"; Recht `tpb_manage_finance`
+- **Fixtures:** `tests/fixtures/bank/statement.csv` + `statement.camt053.xml`
+- **Tests:** `BankFlowTest` (Dedup, Referenz-Match, Bestätigung→Payment/Allocation/Achse, Ausgabe, CAMT) + `DunningTest` (einmalige Stufe) → **131 Tests grün**, `composer audit` sauber
+- **Fix:** SQL-Alias `lines` (reserviertes Wort in MariaDB) → `line_count` (im HTTP-Smoke gefunden, von Tests nicht abgedeckt)
+- **Verifiziert (echtes HTTP):** Import 2 Zeilen; identische Datei erneut ⇒ 0 neu; Bankseite + Dashboard 200
+- **DoD erfüllt:** identische Datei ⇒ 0 neue Zeilen; Referenzzeile ⇒ korrekter Vorschlag; Bestätigung bucht in einer Transaktion; keine Buchung ohne Bestätigung; mehrfacher Mahnlauf ohne Dublette; CSV-/CAMT-Fixtures grün

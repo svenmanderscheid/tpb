@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.053.001.02">
+  <BkToCstmrStmt>
+    <Stmt>
+      <Id>STMT-2026-08</Id>
+      <Acct><Id><IBAN>LU120010009999999999</IBAN></Id></Acct>
+      <Ntry>
+        <Amt Ccy="EUR">190.00</Amt>
+        <CdtDbtInd>CRDT</CdtDbtInd>
+        <BookgDt><Dt>2026-08-10</Dt></BookgDt>
+        <ValDt><Dt>2026-08-10</Dt></ValDt>
+        <NtryDtls><TxDtls>
+          <Refs><EndToEndId>E2E-0001</EndToEndId></Refs>
+          <RltdPties>
+            <Dbtr><Nm>FC Beispiel</Nm></Dbtr>
+            <DbtrAcct><Id><IBAN>LU120010001234567890</IBAN></Id></DbtrAcct>
+          </RltdPties>
+          <RmtInf><Ustrd>Zahlung Rechnung 2026-000001</Ustrd></RmtInf>
+        </TxDtls></NtryDtls>
+      </Ntry>
+      <Ntry>
+        <Amt Ccy="EUR">45.50</Amt>
+        <CdtDbtInd>DBIT</CdtDbtInd>
+        <BookgDt><Dt>2026-08-11</Dt></BookgDt>
+        <ValDt><Dt>2026-08-11</Dt></ValDt>
+        <NtryDtls><TxDtls>
+          <RltdPties>
+            <Cdtr><Nm>Papier Grosshandel GmbH</Nm></Cdtr>
+            <CdtrAcct><Id><IBAN>DE89370400440532013000</IBAN></Id></CdtrAcct>
+          </RltdPties>
+          <RmtInf><Ustrd>Materialeinkauf Folien</Ustrd></RmtInf>
+        </TxDtls></NtryDtls>
+      </Ntry>
+    </Stmt>
+  </BkToCstmrStmt>
+</Document>

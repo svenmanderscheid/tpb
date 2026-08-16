@@ -23,13 +23,13 @@ final class ExpenseRepo
         $publicId = Ulid::generate();
         $now = Clock::nowUtcSeconds();
         Db::run(
-            'INSERT INTO expenses (public_id, expense_date, vendor, category, description, amount_cents, currency, receipt_asset_id, order_id, recorded_by, created_at, updated_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            'INSERT INTO expenses (public_id, expense_date, vendor, category, description, amount_cents, currency, receipt_asset_id, order_id, bank_line_id, recorded_by, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
             [
                 $publicId, (string) $d['expense_date'], mb_substr((string) $d['vendor'], 0, 120), mb_substr((string) $d['category'], 0, 48),
                 isset($d['description']) && $d['description'] !== '' ? mb_substr((string) $d['description'], 0, 255) : null,
                 (int) $d['amount_cents'], 'EUR',
-                $d['receipt_asset_id'] ?? null, $d['order_id'] ?? null, $actorUserId, $now, $now,
+                $d['receipt_asset_id'] ?? null, $d['order_id'] ?? null, $d['bank_line_id'] ?? null, $actorUserId, $now, $now,
             ]
         );
         $id = (int) Db::pdo()->lastInsertId();

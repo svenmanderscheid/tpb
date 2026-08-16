@@ -43,8 +43,8 @@ Claude Code liest diese Datei vor jedem Meilenstein und trägt eigene Fragen unt
 
 ## Vor M8/M9 – Betrieb
 
-- [ ] Hausbank + Exportformat (CSV-Spaltenbelegung oder CAMT.053) + Beispieldatei für `tests/fixtures/bank/`
-- [ ] Mahnstufen: Intervalle, Textbausteine, Verzugsfolgen-Hinweis (juristisch geprüft)
+- [~] Hausbank + Exportformat (M8 umgesetzt mit **Standard-CSV + CAMT.053** und Fixtures in `tests/fixtures/bank/`). **Noch offen:** die **konkrete Spaltenbelegung der Hausbank** (falls abweichend vom Standard-CSV) + eine echte Beispieldatei.
+- [~] Mahnstufen: **Stufe 1 (Erinnerung)** umgesetzt. **Noch offen:** weitere Stufen, Intervalle, Textbausteine, Verzugsfolgen-Hinweis (juristisch geprüft) – Konfig über `business_settings.dunning.levels` vorgesehen.
 - [ ] Verfügbare Produktionsminuten pro Woche (Konzept 20.4)
 
 ## Vor Go-live

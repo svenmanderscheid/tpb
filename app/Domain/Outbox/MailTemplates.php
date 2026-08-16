@@ -100,6 +100,27 @@ final class MailTemplates
         return ['to' => (string) $p['to_email'], 'subject' => $subject, 'text' => $text, 'html' => $html];
     }
 
+    /** @param array<string,mixed> $p Zahlungserinnerung/Mahnung Stufe 1 an den Kunden. */
+    public static function paymentReminder(array $p): array
+    {
+        $number = (string) $p['invoice_number'];
+        $name = trim((string) ($p['to_name'] ?? '')) ?: 'Kundin/Kunde';
+        $amount = Money::format((int) $p['gross_cents'], (string) ($p['currency'] ?? 'EUR'));
+        $due = (string) ($p['due_date'] ?? '');
+
+        $subject = "Zahlungserinnerung zu Rechnung {$number}";
+        $text = "Hallo {$name},\n\n"
+            . "unsere Rechnung {$number} über {$amount} (fällig am {$due}) ist noch offen.\n"
+            . "Falls sich Ihre Zahlung überschnitten hat, betrachten Sie diese Erinnerung bitte als gegenstandslos.\n\n"
+            . "Herzliche Grüße\nThe Printing Brothers";
+        $html = '<p>Hallo ' . e($name) . ',</p>'
+            . '<p>unsere Rechnung <strong>' . e($number) . '</strong> über <strong>' . e($amount) . '</strong> (fällig am ' . e($due) . ') ist noch offen.</p>'
+            . '<p>Falls sich Ihre Zahlung überschnitten hat, betrachten Sie diese Erinnerung bitte als gegenstandslos.</p>'
+            . '<p>Herzliche Grüße<br>The Printing Brothers</p>';
+
+        return ['to' => (string) $p['to_email'], 'subject' => $subject, 'text' => $text, 'html' => $html];
+    }
+
     /** @param array<string,mixed> $p Meldebestand-Alarm (intern an den Owner). */
     public static function stockLow(array $p): array
     {

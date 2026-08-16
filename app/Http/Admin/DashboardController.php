@@ -23,6 +23,7 @@ final class DashboardController
             'nav'         => 'dashboard',
             'displayName' => Auth::displayName() ?? 'Benutzer',
             'role'        => Auth::role() ?? '',
+            'today'       => \Tpb\Domain\Report\TodayList::gather(),
         ]));
     }
 }

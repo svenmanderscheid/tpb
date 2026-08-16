@@ -8,6 +8,7 @@ Stand: M7. Dieses Runbook wird bis zum Go-live vervollständigt.
 |---|---|---|---|
 | Outbox-Worker | `php cli/outbox_worker.php` | jede Minute | Mails/Effekte verarbeiten (Backoff, nach 5 Versuchen `failed` + Audit) |
 | Ablauf | `php cli/expire.php` | stündlich | unbezahlte Shop-Orders (PENDING_PAYMENT) + abgelaufene Angebote → EXPIRED, Reservierungen frei |
+| Mahnwesen | `php cli/reminders.php` | täglich | Zahlungserinnerung (Stufe 1) überfällige Rechnungen + Wiedervorlage ablaufender Angebote (je Stufe einmal) |
 | Health-Check | `php cli/healthcheck.php` | täglich | DB/Backup/Outbox/Disk/Quarantäne; Mail nur bei Problemen + Montags-Summary |
 | Backup | `php cli/backup.php` | täglich | mysqldump.gz + private/-Archiv nach `private/tpb/backups/` |
 | Retention | `php cli/retention.php --apply` | wöchentlich | fällige Assets je `retention_class` löschen (referenzierte werden übersprungen) |
