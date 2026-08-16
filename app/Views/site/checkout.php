@@ -81,7 +81,8 @@ $calc = $config['calculation'] ?? null;
                     <?php if ($calc !== null): ?>
                         <p class="price-total"><?= e(Money::format((int) $calc['total_cents'])) ?></p>
                     <?php endif; ?>
-                    <p class="muted">Endpreis inkl. aller Zuschläge, serverseitig berechnet.</p>
+                    <p class="muted">Produktpreis inkl. aller Zuschläge, serverseitig berechnet.</p>
+                    <p class="muted">Versand: national gratis ab 50 € (sonst Post Luxembourg), international per DHL – der Endbetrag inkl. Versand erscheint auf der Bezahlseite.</p>
                 </div>
             </aside>
         </div>

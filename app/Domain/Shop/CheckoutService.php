@@ -73,8 +73,28 @@ final class CheckoutService
             $custRow = CustomerRepo::findById((int) $customer['id']);
 
             $snapshot = OrderSnapshot::build($payload, $resolved, $breakdown, $pb, $custRow);
+
+            // Versandkosten nach Zone (national/international) + Gratis-Schwelle; in den Preis einkalkuliert.
+            $shipping = \Tpb\Domain\Shipping\ShippingRates::costFor((string) ($customerData['billing_country'] ?? ''), $breakdown->totalCents);
+            $shipCost = (int) $shipping['cost_cents'];
+            $productTotal = (int) $snapshot['totals']['total_cents'];
+            $snapshot['lines'][] = [
+                'pos_no' => count($snapshot['lines']) + 1, 'sku' => null,
+                'description' => 'Versand (' . (string) $shipping['carrier'] . ')' . ($shipping['free_applied'] ? ' – gratis' : ''),
+                'qty' => 1, 'unit_cents' => $shipCost, 'line_cents' => $shipCost,
+            ];
+            $snapshot['totals']['shipping_cents'] = $shipCost;
+            $snapshot['totals']['total_cents'] = $productTotal + $shipCost;
+
             $order = OrderRepo::createFromSnapshot((int) $customer['id'], null, $pb->currency, $snapshot, 'PENDING_PAYMENT', null, 'shop_checkout');
             $orderId = (int) $order['id'];
+            $orderTotal = $productTotal + $shipCost;
+
+            // Sendung mit Versandart/Carrier/Kosten anlegen (Adresse aus dem Kundenstamm).
+            $shipmentRow = \Tpb\Domain\Shipping\ShipmentRepo::ensureForOrder($orderId, null);
+            \Tpb\Domain\Shipping\ShipmentRepo::update((int) $shipmentRow['id'], [
+                'method' => (string) $shipping['method'], 'carrier' => (string) $shipping['carrier'], 'shipping_cost_cents' => $shipCost,
+            ]);
 
             // Bestand reservieren (kein Oversell). Abbuchung erst bei bezahlter Bestellung.
             $variantQtys = [];
@@ -108,23 +128,24 @@ final class CheckoutService
             // Zahlungsabsicht beim aktiven Gateway (Testmodus).
             $gateway = GatewayFactory::active();
             $intentPublic = Ulid::generate();
-            $checkout = $gateway->createCheckout($intentPublic, $breakdown->totalCents, $pb->currency);
+            $checkout = $gateway->createCheckout($intentPublic, $orderTotal, $pb->currency);
             Db::run(
                 'INSERT INTO payment_intents (public_id, order_id, provider, provider_ref, amount_cents, currency, status, checkout_url, created_at, updated_at)
                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                [$intentPublic, $orderId, $gateway->provider(), $checkout['provider_ref'], $breakdown->totalCents, $pb->currency, 'created', $checkout['checkout_url'], $now, $now]
+                [$intentPublic, $orderId, $gateway->provider(), $checkout['provider_ref'], $orderTotal, $pb->currency, 'created', $checkout['checkout_url'], $now, $now]
             );
 
             Audit::log('order', (string) $order['public_id'], 'checkout.started', [
                 'actor_label' => 'shop_customer',
-                'metadata'    => ['total_cents' => $breakdown->totalCents, 'provider' => $gateway->provider()],
+                'metadata'    => ['total_cents' => $orderTotal, 'shipping_cents' => $shipCost, 'provider' => $gateway->provider()],
             ]);
 
             return [
                 'order_public_id'  => (string) $order['public_id'],
                 'checkout_url'     => (string) $checkout['checkout_url'],
                 'intent_public_id' => $intentPublic,
-                'total_cents'      => $breakdown->totalCents,
+                'total_cents'      => $orderTotal,
+                'shipping_cents'   => $shipCost,
             ];
         });
     }

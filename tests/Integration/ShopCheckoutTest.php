@@ -92,11 +92,11 @@ final class ShopCheckoutTest extends TestCase
         }
     }
 
-    private function savedConfig(): string
+    private function savedConfig(int $qty = 10): string
     {
         $payload = ['express' => false, 'fileprep' => false, 'items' => [[
             'product' => $this->productPublic, 'type' => 'configured', 'technique_code' => 'FLEX',
-            'sizes' => [['variant_sku' => 'TEST-BLK-M', 'qty' => 10]],
+            'sizes' => [['variant_sku' => 'TEST-BLK-M', 'qty' => $qty]],
             'layers' => [['placement_code' => 'brust', 'layer_type' => 'text', 'text_content' => 'TPB', 'width_mm' => '90', 'height_mm' => '20']],
             'units' => [],
         ]]];
@@ -106,10 +106,37 @@ final class ShopCheckoutTest extends TestCase
     }
 
     /** @return array<string,mixed> */
-    private function customerData(): array
+    private function customerData(string $country = 'LU'): array
     {
         return ['type' => 'private', 'first_name' => 'Max', 'last_name' => 'Muster', 'email' => 'max@example.com',
-                'billing_street' => '1 Rue', 'billing_zip' => 'L-1', 'billing_city' => 'Lux', 'billing_country' => 'LU'];
+                'billing_street' => '1 Rue', 'billing_zip' => 'L-1', 'billing_city' => 'Lux', 'billing_country' => $country];
+    }
+
+    public function testNationalSmallOrderAddsShipping(): void
+    {
+        // 1 Stück = 1900 (< 50 € Schwelle) ⇒ nationaler Versand 500 (Default) im Gesamtpreis.
+        $res = CheckoutService::start($this->savedConfig(1), $this->customerData('LU'), ['agb', 'widerruf']);
+        self::assertSame(1900 + 500, $res['total_cents']);
+        self::assertSame(500, $res['shipping_cents']);
+        $orderId = (int) OrderRepo::findByPublicId($res['order_public_id'])['id'];
+        self::assertSame(2400, (int) Db::run('SELECT total_cents FROM orders WHERE id = ?', [$orderId])->fetchColumn());
+        self::assertSame(500, (int) Db::run('SELECT shipping_cost_cents FROM shipments WHERE order_id = ?', [$orderId])->fetchColumn());
+    }
+
+    public function testInternationalOrderAddsDhl(): void
+    {
+        $res = CheckoutService::start($this->savedConfig(1), $this->customerData('DE'), ['agb', 'widerruf']);
+        self::assertSame(1900 + 1500, $res['total_cents']);
+        $orderId = (int) OrderRepo::findByPublicId($res['order_public_id'])['id'];
+        self::assertSame('DHL', (string) Db::run('SELECT carrier FROM shipments WHERE order_id = ?', [$orderId])->fetchColumn());
+    }
+
+    public function testNationalLargeOrderFreeShipping(): void
+    {
+        // 10 Stück = 19000 (≥ 50 €) ⇒ national gratis.
+        $res = CheckoutService::start($this->savedConfig(10), $this->customerData('LU'), ['agb', 'widerruf']);
+        self::assertSame(19000, $res['total_cents']);
+        self::assertSame(0, $res['shipping_cents']);
     }
 
     /** @return array{0:string,1:string} [payload, signature] */

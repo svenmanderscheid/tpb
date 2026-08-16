@@ -224,6 +224,13 @@ function seed_m6_basics(): void
         'seller.snapshot'    => $seller,
         'invoice.due_days'   => '30',
         'tax.active_regime'  => '"FRANCHISE_57BIS"',
+        // Versandkosten (Owner 2026-08-16, Beträge Platzhalter): national Post LU,
+        // international DHL, national gratis ab 50 €. Im Preis einkalkuliert.
+        'shipping.national_cents'                => '500',
+        'shipping.international_cents'            => '1500',
+        'shipping.free_national_threshold_cents' => '5000',
+        'shipping.national_carrier'              => '"Post Luxembourg"',
+        'shipping.international_carrier'          => '"DHL"',
     ] as $k => $v) {
         \Tpb\Core\Db::run(
             "INSERT INTO business_settings (setting_key, value_json, updated_at)
