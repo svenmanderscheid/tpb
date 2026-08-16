@@ -20,6 +20,24 @@ final class NumberSequence
     /** Formate §9.3: ORD-2026-000123, JOB-2026-000456, Q-2026-000123, ZA-2026-000001. */
     public static function next(string $type, string $prefix, int $pad = 6): string
     {
+        [$year, $n] = self::allocate($type);
+        return sprintf('%s-%d-%0' . $pad . 'd', $prefix, $year, $n);
+    }
+
+    /** Rechnungsnummer §9.3: `2026-000001` (eigene Sequenz `invoice`, ohne Präfix). */
+    public static function nextInvoice(int $pad = 6): string
+    {
+        [$year, $n] = self::allocate('invoice');
+        return sprintf('%d-%0' . $pad . 'd', $year, $n);
+    }
+
+    /**
+     * Zieht den nächsten Zählwert lückenfrei (INSERT IGNORE + SELECT … FOR UPDATE + UPDATE).
+     * MUSS in einer aktiven Db::tx() laufen (Nummernvergabe ist Teil derselben Mutation).
+     * @return array{0:int,1:int} [fiscal_year, next_value]
+     */
+    private static function allocate(string $type): array
+    {
         $year = (int) Clock::nowUtc()->format('Y');
         $pdo = Db::pdo();
 
@@ -40,6 +58,6 @@ final class NumberSequence
              WHERE seq_type = ? AND fiscal_year = ?'
         )->execute([$type, $year]);
 
-        return sprintf('%s-%d-%0' . $pad . 'd', $prefix, $year, $n);
+        return [$year, $n];
     }
 }

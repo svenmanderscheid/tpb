@@ -7,8 +7,11 @@ use Tpb\Http\Admin\CatalogController;
 use Tpb\Http\Admin\DashboardController;
 use Tpb\Http\Admin\FileController;
 use Tpb\Http\Admin\CostVersionController;
+use Tpb\Http\Admin\ExpenseController;
 use Tpb\Http\Admin\FinanceController;
+use Tpb\Http\Admin\InvoiceController;
 use Tpb\Http\Admin\OrderController;
+use Tpb\Http\Admin\PaymentController;
 use Tpb\Http\Admin\PriceBookController;
 use Tpb\Http\Admin\ProductionController;
 use Tpb\Http\Admin\QuoteController;
@@ -111,6 +114,20 @@ return [
     ['POST', '/admin/job/{publicId}/menge',              [ProductionController::class, 'quantity'],       ['auth:tpb_manage_production', 'csrf']],
     ['POST', '/admin/job/{publicId}/etikett',            [ProductionController::class, 'label'],          ['auth:tpb_manage_production', 'csrf']],
     ['POST', '/admin/job/{publicId}/etikett/neu',        [ProductionController::class, 'reprint'],        ['auth:tpb_manage_production', 'csrf']],
+
+    // Rechnungen & Gutschriften (M6) – Ausstellen: tpb_issue_invoices, Lesen: tpb_view_costs
+    ['GET',  '/admin/rechnungen',                        [InvoiceController::class, 'index'],          ['auth:tpb_view_costs']],
+    ['GET',  '/admin/rechnung/{publicId}',               [InvoiceController::class, 'show'],           ['auth:tpb_view_costs']],
+    ['POST', '/admin/auftrag/{publicId}/rechnung',       [InvoiceController::class, 'createFromOrder'], ['auth:tpb_issue_invoices', 'csrf']],
+    ['POST', '/admin/rechnung/{publicId}/ausstellen',    [InvoiceController::class, 'issue'],           ['auth:tpb_issue_invoices', 'csrf']],
+    ['POST', '/admin/rechnung/{publicId}/gutschrift',    [InvoiceController::class, 'credit'],          ['auth:tpb_issue_invoices', 'csrf']],
+
+    // Zahlungen (M6) – Recht: tpb_manage_finance
+    ['POST', '/admin/auftrag/{publicId}/zahlung',        [PaymentController::class, 'record'],          ['auth:tpb_manage_finance', 'csrf']],
+
+    // Ausgaben (M6) – Lesen: tpb_view_costs, Erfassen: tpb_manage_finance
+    ['GET',  '/admin/ausgaben',                          [ExpenseController::class, 'index'],           ['auth:tpb_view_costs']],
+    ['POST', '/admin/ausgaben',                          [ExpenseController::class, 'store'],           ['auth:tpb_manage_finance', 'csrf', 'rate:upload']],
 
     // Versand & Fulfillment (DECISIONS #28) – Rechte: tpb_manage_production
     ['POST', '/admin/auftrag/{publicId}/versand',              [ShippingController::class, 'configure'], ['auth:tpb_manage_production', 'csrf']],

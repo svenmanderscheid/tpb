@@ -80,6 +80,26 @@ final class MailTemplates
         return ['to' => (string) $p['to_email'], 'subject' => $subject, 'text' => $text, 'html' => $html];
     }
 
+    /** @param array<string,mixed> $p */
+    public static function invoiceIssued(array $p): array
+    {
+        $isCredit = ($p['doc_type'] ?? 'invoice') === 'credit_note';
+        $number = (string) $p['invoice_number'];
+        $name = trim((string) ($p['to_name'] ?? '')) ?: 'Kundin/Kunde';
+        $amount = Money::format(abs((int) $p['gross_cents']), (string) ($p['currency'] ?? 'EUR'));
+        $doc = $isCredit ? 'Gutschrift' : 'Rechnung';
+
+        $subject = "{$doc} {$number}";
+        $text = "Hallo {$name},\n\n"
+            . "anbei Ihre {$doc} {$number} über {$amount}.\n\n"
+            . "Herzliche Grüße\nThe Printing Brothers";
+        $html = '<p>Hallo ' . e($name) . ',</p>'
+            . '<p>anbei Ihre ' . e($doc) . ' <strong>' . e($number) . '</strong> über <strong>' . e($amount) . '</strong>.</p>'
+            . '<p>Herzliche Grüße<br>The Printing Brothers</p>';
+
+        return ['to' => (string) $p['to_email'], 'subject' => $subject, 'text' => $text, 'html' => $html];
+    }
+
     private static function base(): string
     {
         return rtrim((string) (Env::get('APP_URL', 'http://tpb.local') ?? 'http://tpb.local'), '/');

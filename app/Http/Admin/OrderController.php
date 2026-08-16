@@ -48,6 +48,9 @@ final class OrderController
             $lastShipmentPrint = $lp !== false ? (int) $lp : null;
         }
 
+        $invoice = \Tpb\Domain\Invoice\InvoiceRepo::primaryForOrder($orderId);
+        $report = \Tpb\Domain\Report\OrderFinanceReport::forOrder($orderId);
+
         Response::html(View::render('admin/orders/show', [
             'title'    => 'Auftrag ' . $order['order_number'],
             'nav'      => 'orders',
@@ -58,6 +61,8 @@ final class OrderController
             'proofs'   => ProofRepo::listForOrder($orderId),
             'shipment' => $shipment,
             'last_shipment_print' => $lastShipmentPrint,
+            'invoice'  => $invoice,
+            'report'   => $report,
             'flash'    => $this->takeFlash(),
         ]));
     }

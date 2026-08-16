@@ -133,3 +133,18 @@
 - **Tests:** `ShippingFlowTest` (5) → **89 Tests grün**, `composer audit` sauber
 - **Verifiziert:** HTTP-Flow (configure → pack → ship → Etikett) über echte CSRF/Session; Hausetikett-PDF (100×150 mm, einseitig) visuell geprüft
 - **Fix:** feste `height` an Etiketten-Views entfernt (verhinderte leere zweite PDF-Seite bei Job- und Versandetikett)
+
+## 2026-08-16 – M6: Rechnung & Plan/Ist (Branch m1-katalog-preis)
+- **Migration 005** `expenses` (genutzt) + bank_imports/bank_lines/reminders_sent (für M8 vorab, §14.5)
+- **Rechnungsnummer** `2026-000001` (eigene Sequenz `invoice`, ohne Präfix, §9.3) via `NumberSequence::nextInvoice`
+- **Issue-Flow §11.2:** `InvoiceService` (Draft aus Auftrag → `issue`: Nummer ziehen, Seller/Customer/Tax/Lines einfrieren, **kanonisches JSON und PDF aus DEMSELBEN Snapshot**, beide als Assets + SHA-256, Status **ISSUED unumkehrbar**); Steuer aus `tax_regime_versions` (Platzhalter Franchise Art. 57bis → 0 % USt, DECISIONS #29)
+- **Gutschrift:** eigener Beleg `credit_note` mit `credited_invoice_id`, negierten Positionen, eigener Nummer; Original → FULLY_CREDITED
+- **Zahlung:** `PaymentService` erfasst + ordnet automatisch zu; Zahlungsachse **abgeleitet** (NOT_DUE/UNPAID/PARTIALLY_PAID/PAID); Umsatz ≠ Zahlungseingang getrennt
+- **Ausgaben:** `ExpenseRepo` + Erfassung mit Beleg-Upload + optionaler Auftragszuordnung
+- **Plan/Ist-Report je Auftrag** (`OrderFinanceReport`, §11.7 vereinfacht): Umsatz/Fakturiert/Eingang, Selbstkosten-Untergrenze (Plan), DB, Ist-Minuten/Ausschuss aus `production_events`
+- **HTTP Admin:** Rechnungen-Liste/Detail (Ausstellen/Gutschrift/PDF), Auftrag: Rechnung/Zahlung/DB-Karten, Ausgaben-Seite; Nav „Rechnungen"/„Ausgaben"; Rechte tpb_issue_invoices/tpb_view_costs/tpb_manage_finance
+- **Seed** `--scenario=m6` (Platzhalter-Steuerregime + Verkäufer-Snapshot + Zahlungsziel 30 Tage)
+- **DoD erfüllt:** zwei PDO-Verbindungen ⇒ keine Doppelnummer; ISSUED nicht editierbar; Snapshot/PDF/JSON-Summen identisch (SHA-256); Umsatz≠Zahlungseingang getrennt sichtbar; Gutschrift referenziert korrekt
+- **Tests:** `InvoiceFlowTest` (6) → **95 Tests grün**, `composer audit` sauber
+- **Verifiziert:** Rechnungs-PDF (2026-000001, 190,00 €, einseitig, Steuerlegende) visuell geprüft; Teilzahlung → PARTIALLY_PAID; Admin-Rechnungsseiten 200
+- Offen (blockiert M6 nicht, siehe OFFENE-FRAGEN): USt-Regime-Bestätigung, echte Steuerlegende/Verkäuferdaten (Platzhalter)

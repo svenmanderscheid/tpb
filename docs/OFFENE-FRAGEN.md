@@ -21,6 +21,13 @@ Claude Code liest diese Datei vor jedem Meilenstein und trägt eigene Fragen unt
 - [ ] Anzahlungs-Wortlaut („keine Rechnung“-Formulierung, Fälligkeit) – Fiduciaire-Freigabe (Konzept 20.2)
 - [ ] SMTP-Zugang (erst ab M3-Abnahme; bis dahin `MAIL_DRIVER=file`) — **lokal aktiv `MAIL_DRIVER=file`**, Angebots-/Auftragsmails landen als `.eml` in `private/tpb/outbox-mails/`.
 
+## Vor M6-Abnahme – Rechnung (Owner/Fiduciaire)
+
+- [ ] **USt-Regime bestätigen:** Franchise/Kleinunternehmer (Art. 57bis, 0 % USt) **oder** USt-pflichtig? M6 rechnet aktuell mit dem Platzhalter-Regime `FRANCHISE_57BIS` (0 % USt). Bei USt-Pflicht muss die Engine um Steuersätze erweitert werden.
+- [ ] **Steuerlegende Volltext** (Art. 57bis, §11.5) – ersetzt den Platzhalter in `tax_regime_versions`.
+- [ ] **Verkäufer-Snapshot** (Firmendaten/Adresse/Autorisation/Registernummern, Konzept 12.1) – ersetzt `business_settings.seller.snapshot`; **blockiert Go-live**.
+- [ ] **Zahlungsziel** bestätigen (derzeit Platzhalter 30 Tage, `business_settings.invoice.due_days`).
+
 ## Vor M6b – Shop & Zahlung
 
 - [ ] Zahlungsanbieter-Entscheidung (gehostete Seite, signierte Webhooks, Gebühren, Auszahlungsrhythmus, Luxemburg-Zahlarten) – **Onboarding erst nach Gründung möglich**

@@ -40,6 +40,7 @@ if ($scenario === null) {
     echo "Verfügbare Szenarien:\n";
     echo "  --scenario=test  Testobjekt + veröffentlichtes Preisbuch/Kostenversion (M1/M2)\n";
     echo "  --scenario=m3    Platzhalter-Rechtstexte (published) + Angebots-Gültigkeitsdauer (M3)\n";
+    echo "  --scenario=m6    Platzhalter-Steuerregime (Art. 57bis) + Verkäufer-Snapshot + Zahlungsziel (M6)\n";
     foreach ($scenarios as $n => $desc) {
         echo "  --scenario={$n}  {$desc}\n";
     }
@@ -53,6 +54,11 @@ if ($scenario === 'test') {
 
 if ($scenario === 'm3') {
     seed_m3_basics();
+    exit(0);
+}
+
+if ($scenario === 'm6') {
+    seed_m6_basics();
     exit(0);
 }
 
@@ -183,4 +189,48 @@ function seed_m3_basics(): void
         [$now]
     );
     echo "business_settings.reminder.quote_expiry_days = 14 gesetzt.\n";
+}
+
+/**
+ * M6-Grundlagen: PLATZHALTER-Steuerregime (Art. 57bis Franchise = keine USt), Verkäufer-
+ * Snapshot und Zahlungsziel. Alles klar als Platzhalter markiert – echte Werte (Volltext
+ * Art. 57bis, Firmendaten) blockieren den Go-live und werden nicht erfunden (§14.4). Idempotent.
+ */
+function seed_m6_basics(): void
+{
+    $now = \Tpb\Core\Clock::nowUtcSeconds();
+    $today = \Tpb\Core\Clock::nowUtc()->format('Y-m-d');
+
+    $exists = \Tpb\Core\Db::run("SELECT id FROM tax_regime_versions WHERE regime_code = 'FRANCHISE_57BIS' LIMIT 1")->fetch();
+    if ($exists === false) {
+        \Tpb\Core\Db::run(
+            "INSERT INTO tax_regime_versions (regime_code, legend_text, valid_from, created_at)
+             VALUES ('FRANCHISE_57BIS', ?, ?, ?)",
+            ['PLATZHALTER – Steuerregelung (Art. 57bis / Kleinunternehmer): keine USt ausgewiesen. Juristischer Volltext ausstehend.', $today, $now]
+        );
+        echo "tax_regime_versions FRANCHISE_57BIS (Platzhalter) angelegt.\n";
+    } else {
+        echo "tax_regime_versions FRANCHISE_57BIS existiert bereits – übersprungen.\n";
+    }
+
+    $seller = json_encode([
+        'placeholder'   => true,
+        'name'          => 'The Printing Brothers (PLATZHALTER)',
+        'address_lines' => ['Adresse ausstehend', 'L-0000 Luxembourg'],
+        'contact'       => 'kontakt@tpb.local',
+        'legal_note'    => 'Rechtsform/Autorisation/Registernummern ausstehend (blockiert Go-live).',
+    ], JSON_UNESCAPED_UNICODE);
+    foreach ([
+        'seller.snapshot'    => $seller,
+        'invoice.due_days'   => '30',
+        'tax.active_regime'  => '"FRANCHISE_57BIS"',
+    ] as $k => $v) {
+        \Tpb\Core\Db::run(
+            "INSERT INTO business_settings (setting_key, value_json, updated_at)
+             VALUES (?, ?, ?)
+             ON DUPLICATE KEY UPDATE value_json = VALUES(value_json), updated_at = VALUES(updated_at)",
+            [$k, $v, $now]
+        );
+    }
+    echo "business_settings: seller.snapshot (Platzhalter), invoice.due_days=30, tax.active_regime gesetzt.\n";
 }

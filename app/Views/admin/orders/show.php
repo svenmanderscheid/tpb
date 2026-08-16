@@ -7,8 +7,11 @@
  * @var array<int,array<string,mixed>> $proofs
  * @var array<string,mixed>|null $shipment
  * @var int|null $last_shipment_print
+ * @var array<string,mixed>|null $invoice
+ * @var array<string,int|bool> $report
  * @var array{type:string,text:string}|null $flash
  */
+use Tpb\Core\Authz;
 use Tpb\Core\Csrf;
 use Tpb\Core\Money;
 
@@ -127,6 +130,47 @@ $proofLabels = ['draft' => 'Entwurf', 'sent' => 'Versendet', 'approved' => 'Frei
             <?php elseif ($art === 'LOCKED'): ?>
                 <p class="muted">Bereits freigegeben.</p>
             <?php endif; ?>
+        </div>
+
+        <div class="card">
+            <h2>Rechnung &amp; Zahlung</h2>
+            <?php $pay = (string) $order['cur_payment']; $payLabels = ['NOT_DUE' => 'nicht fällig', 'UNPAID' => 'offen', 'PARTIALLY_PAID' => 'teilbezahlt', 'PAID' => 'bezahlt', 'REFUNDED' => 'erstattet']; ?>
+            <p>Zahlungsstatus: <span class="status-badge <?= e(strtolower($pay)) ?>"><?= e($payLabels[$pay] ?? $pay) ?></span></p>
+            <?php if ($invoice === null): ?>
+                <?php if (Authz::can('tpb_issue_invoices')): ?>
+                    <form method="post" action="/admin/auftrag/<?= e((string) $order['public_id']) ?>/rechnung"><?= Csrf::field() ?><button type="submit" class="btn secondary">Rechnungsentwurf erstellen</button></form>
+                <?php else: ?><p class="muted">Noch keine Rechnung.</p><?php endif; ?>
+            <?php else: ?>
+                <p><a href="/admin/rechnung/<?= e((string) $invoice['public_id']) ?>"><?= e((string) ($invoice['invoice_number'] ?? 'Entwurf')) ?></a> ·
+                   <?= e((string) $invoice['status']) ?> · <?= e(Money::format((int) $invoice['gross_cents'], (string) $invoice['currency'])) ?></p>
+            <?php endif; ?>
+
+            <?php if (Authz::can('tpb_manage_finance')): ?>
+            <form method="post" action="/admin/auftrag/<?= e((string) $order['public_id']) ?>/zahlung" class="mt">
+                <?= Csrf::field() ?>
+                <div class="field-row">
+                    <div class="field"><label for="amount">Zahlung €</label><input type="text" id="amount" name="amount"></div>
+                    <div class="field"><label for="method">Art</label><select id="method" name="method"><option value="bank_transfer">Überweisung</option><option value="cash">Bar</option><option value="other">Sonstiges</option></select></div>
+                </div>
+                <div class="field"><label for="reference">Referenz</label><input type="text" id="reference" name="reference"></div>
+                <button type="submit" class="btn secondary">Zahlung erfassen</button>
+            </form>
+            <?php endif; ?>
+        </div>
+
+        <div class="card">
+            <h2>Deckungsbeitrag (Plan/Ist)</h2>
+            <table>
+                <tr><td>Umsatz (Plan)</td><td class="num"><?= e(Money::format((int) $report['revenue_plan'])) ?></td></tr>
+                <tr><td>Umsatz (fakturiert)</td><td class="num"><?= e(Money::format((int) $report['invoiced'])) ?></td></tr>
+                <tr><td>Zahlungseingang</td><td class="num"><?= e(Money::format((int) $report['received'])) ?></td></tr>
+                <tr><td>Selbstkosten-Untergrenze (Plan)</td><td class="num"><?= e(Money::format((int) $report['planned_self_cost'])) ?></td></tr>
+                <tr><td><strong>DB Plan</strong></td><td class="num"><strong><?= e(Money::format((int) $report['db_plan'])) ?></strong></td></tr>
+                <tr><td>Ist-Produktionsminuten</td><td class="num"><?= e((string) $report['actual_minutes']) ?></td></tr>
+                <tr><td>Ausschuss (Stück)</td><td class="num"><?= e((string) $report['scrap_units']) ?></td></tr>
+                <tr><td>Ausgaben (Auftrag)</td><td class="num"><?= e(Money::format((int) $report['expenses'])) ?></td></tr>
+            </table>
+            <p class="muted">Vereinfachte Sicht (§11.7): Ist-Zeit/Ausschuss aus der Produktion, eingefrorene Sätze.</p>
         </div>
 
         <div class="card">

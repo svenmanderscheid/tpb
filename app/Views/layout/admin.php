@@ -40,6 +40,12 @@ $activeNav = $nav ?? '';
                 <a href="/admin/assets" class="<?= $activeNav === 'assets' ? 'active' : '' ?>">Assets</a>
             <?php endif; ?>
             <?php if (Authz::can('tpb_view_costs')): ?>
+                <a href="/admin/rechnungen" class="<?= $activeNav === 'invoices' ? 'active' : '' ?>">Rechnungen</a>
+            <?php endif; ?>
+            <?php if (Authz::can('tpb_view_costs')): ?>
+                <a href="/admin/ausgaben" class="<?= $activeNav === 'expenses' ? 'active' : '' ?>">Ausgaben</a>
+            <?php endif; ?>
+            <?php if (Authz::can('tpb_view_costs')): ?>
                 <a href="/admin/finanzen" class="<?= $activeNav === 'finance' ? 'active' : '' ?>">Finanzen</a>
             <?php endif; ?>
         </nav>
