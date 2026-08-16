@@ -32,4 +32,15 @@ final class Barcode
         ]);
         return (new QRCode($options))->render($data);
     }
+
+    /** QR-Code als rohe PNG-Bytes (für einen Bild-Endpunkt, CSP-konform ohne data:). */
+    public static function qrPngRaw(string $data, int $scale = 5): string
+    {
+        $options = new QROptions([
+            'outputInterface' => QRGdImagePNG::class,
+            'outputBase64'    => false,
+            'scale'           => $scale,
+        ]);
+        return (new QRCode($options))->render($data);
+    }
 }

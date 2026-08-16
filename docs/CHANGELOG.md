@@ -174,3 +174,11 @@
 - **Tests:** `StockFlowTest` (5) → **107 Tests grün**, `composer audit` sauber
 - **Verifiziert (echtes HTTP):** Konfigurator zeigt Verfügbarkeit (17); Checkout reserviert (→7); Zahlung bucht ab (stock 10, Bewegung `sale`, Reservierung consumed); Admin-Lagerseite 200
 - **Owner-Antworten zusätzlich dokumentiert** (OFFENE-FRAGEN): Produkte Hoodies/T-Shirts S–XXL; Versand national Post LU / international DHL, Kosten im Preis + Gratis ab 50 € national, Autodruck gewünscht (Etikett wird erzeugt; stiller Druck via Agent später). **Noch offen:** Farben/Preise/Kostenwerte, Recht/Steuer, Firmengründung.
+
+## 2026-08-16 – M7: Härtung (Teil 1: MFA + Betrieb, Branch m1-katalog-preis)
+- **TOTP-MFA** (Eigenimplementierung, RFC 6238): `Domain/Auth/Totp` (gegen RFC-Vektoren getestet) + `MfaService` (Aktivierung mit Code-Bestätigung, 8 Backup-Codes nur als SHA-256, Deaktivierung); **zweistufiger Login** (Passwort → Code/Backup); für owner/admin/finance ab Nicht-Lokal-Deployment verpflichtend (lokal optional). Selbstverwaltung `/admin/mfa`; QR über PNG-Endpunkt `/admin/mfa/qr` (CSP bleibt streng, kein `data:`)
+- **Betrieb:** `HealthCheck` (DB/Backup/Outbox/Disk/Quarantäne) + öffentlicher **`/health`** (200/503, keine sensiblen Daten); `cli/healthcheck.php` (Mail nur bei Problemen + Montags-Summary); `cli/retention.php` (fällige Assets je `retention_class`, referenzierte übersprungen, Standard-Trockenlauf/`--apply`)
+- **Doku:** `docs/RUNBOOK.md` (Cron/Handgriffe/Incidents) + `docs/DEPLOY.md` (Hostinger-Grundgerüst, §14.6/§14.7)
+- **Tests:** `TotpTest` (RFC-Vektoren), `MfaServiceTest`, `HealthCheckTest` → **124 Tests grün**, `composer audit` sauber
+- **Verifiziert:** `/health` 200 ok; healthcheck erkennt veraltetes Backup + reiht Alarm-Mail; retention Trockenlauf; MFA-Seiten 200, QR-Endpunkt liefert `image/png`
+- **Noch offen für M7-Abschluss (beim Deployment, DECISIONS #33):** sudo-Modus, Checkout-Rechtsprüfung Kap. 12, Backup/Restore-Test-Doku, Seeds-End-to-End, konkrete Hostinger-Schritte

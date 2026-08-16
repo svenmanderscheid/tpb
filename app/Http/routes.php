@@ -10,6 +10,7 @@ use Tpb\Http\Admin\CostVersionController;
 use Tpb\Http\Admin\ExpenseController;
 use Tpb\Http\Admin\FinanceController;
 use Tpb\Http\Admin\InvoiceController;
+use Tpb\Http\Admin\MfaController;
 use Tpb\Http\Admin\OrderController;
 use Tpb\Http\Admin\PaymentController;
 use Tpb\Http\Admin\PriceBookController;
@@ -20,6 +21,7 @@ use Tpb\Http\Admin\ShopController;
 use Tpb\Http\Admin\StockController;
 use Tpb\Http\Admin\TechniqueController;
 use Tpb\Http\Api\ConfigController;
+use Tpb\Http\Api\HealthController;
 use Tpb\Http\Api\PriceController;
 use Tpb\Http\Api\WebhookController;
 use Tpb\Http\Site\CheckoutController;
@@ -34,6 +36,9 @@ use Tpb\Http\Site\SiteController;
  * Middleware-Tags: public, auth[:<capability>], csrf, rate:<bucket>.
  */
 return [
+    // Health-Endpunkt (M7) – ohne sensible Daten, für externen Uptime-Monitor
+    ['GET',  '/health',                [HealthController::class, 'health'], ['public']],
+
     // Öffentliche Basisseiten (M3)
     ['GET',  '/',                      [SiteController::class, 'home'],  ['public']],
     ['GET',  '/produkte',              [SiteController::class, 'index'], ['public']],
@@ -75,7 +80,14 @@ return [
     // Auth
     ['GET',  '/admin/login',   [AuthController::class, 'showLogin'],  ['public']],
     ['POST', '/admin/login',   [AuthController::class, 'login'],      ['public', 'csrf']],
+    ['POST', '/admin/login/mfa', [AuthController::class, 'mfaVerify'], ['public', 'csrf']],
     ['POST', '/admin/logout',  [AuthController::class, 'logout'],     ['auth', 'csrf']],
+
+    // Zwei-Faktor-Authentifizierung (M7, Selbstverwaltung)
+    ['GET',  '/admin/mfa',              [MfaController::class, 'setup'],   ['auth']],
+    ['GET',  '/admin/mfa/qr',           [MfaController::class, 'qr'],      ['auth']],
+    ['POST', '/admin/mfa/aktivieren',   [MfaController::class, 'enable'],  ['auth', 'csrf']],
+    ['POST', '/admin/mfa/deaktivieren', [MfaController::class, 'disable'], ['auth', 'csrf']],
 
     // Backoffice
     ['GET',  '/admin',         [DashboardController::class, 'index'], ['auth']],

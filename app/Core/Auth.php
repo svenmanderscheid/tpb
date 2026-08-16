@@ -65,6 +65,27 @@ final class Auth
         $_SESSION['last_seen'] = $now;
     }
 
+    /** Zwischenzustand nach korrektem Passwort, aber vor der MFA-Bestätigung (5 min gültig). */
+    public static function loginPending(int $userId): void
+    {
+        session_regenerate_id(true);
+        $_SESSION['mfa_pending'] = ['uid' => $userId, 'at' => time()];
+    }
+
+    public static function pendingUid(): ?int
+    {
+        $p = $_SESSION['mfa_pending'] ?? null;
+        if (!is_array($p) || (time() - (int) ($p['at'] ?? 0)) > 300) {
+            return null;
+        }
+        return (int) $p['uid'];
+    }
+
+    public static function clearPending(): void
+    {
+        unset($_SESSION['mfa_pending']);
+    }
+
     public static function logout(): void
     {
         $_SESSION = [];

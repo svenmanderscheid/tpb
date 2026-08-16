@@ -57,6 +57,7 @@ $activeNav = $nav ?? '';
         </nav>
         <div>
             <span class="user"><?= e(Auth::displayName() ?? '') ?> · <?= e(Auth::role() ?? '') ?></span>
+            <a href="/admin/mfa" class="user">2FA</a>
             <form method="post" action="/admin/logout">
                 <?= Csrf::field() ?>
                 <button type="submit" class="btn secondary">Abmelden</button>

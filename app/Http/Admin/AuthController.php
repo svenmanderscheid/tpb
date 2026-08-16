@@ -11,6 +11,7 @@ use Tpb\Core\Request;
 use Tpb\Core\Response;
 use Tpb\Core\View;
 use Tpb\Domain\Audit\Audit;
+use Tpb\Domain\Auth\MfaService;
 
 final class AuthController
 {
@@ -55,16 +56,56 @@ final class AuthController
         }
 
         RateLimit::recordLogin($email, $ip, true);
+
+        // MFA aktiv ⇒ Passwort reicht nicht: Zwischenzustand + zweiter Faktor.
+        if (MfaService::isEnabled((int) $user['id'])) {
+            Auth::loginPending((int) $user['id']);
+            Response::html(View::render('admin/login_mfa', ['error' => null], null));
+            return;
+        }
+
+        $this->completeLogin($user);
+    }
+
+    /** @param array<string,string> $params */
+    public function mfaVerify(array $params): void
+    {
+        $uid = Auth::pendingUid();
+        if ($uid === null) {
+            Response::redirect('/admin/login');
+            return;
+        }
+        $code = (string) Request::post('code', '');
+        if (!MfaService::verifyLogin($uid, $code)) {
+            Audit::log('user', (string) $uid, 'auth.mfa_failed', ['actor_user_id' => $uid]);
+            Response::html(View::render('admin/login_mfa', ['error' => 'Code ist ungültig oder abgelaufen.'], null), 401);
+            return;
+        }
+        $user = Db::run('SELECT id, email, display_name, role, status FROM users WHERE id = ? AND status = ? LIMIT 1', [$uid, 'active'])->fetch();
+        if ($user === false) {
+            Auth::clearPending();
+            Response::redirect('/admin/login');
+            return;
+        }
+        Auth::clearPending();
+        $this->completeLogin($user);
+    }
+
+    /** @param array<string,mixed> $user */
+    private function completeLogin(array $user): void
+    {
         Auth::login($user);
-        Db::run(
-            'UPDATE users SET last_login_at = ? WHERE id = ?',
-            [Clock::nowUtcSeconds(), (int) $user['id']]
-        );
+        Db::run('UPDATE users SET last_login_at = ? WHERE id = ?', [Clock::nowUtcSeconds(), (int) $user['id']]);
         Audit::log('user', (string) $user['id'], 'auth.login', [
             'actor_user_id' => (int) $user['id'],
-            'actor_label'   => $user['email'],
+            'actor_label'   => $user['email'] ?? null,
         ]);
 
+        // Pflicht-MFA (Nicht-Lokal, privilegierte Rolle) noch nicht eingerichtet ⇒ zur Einrichtung.
+        if (MfaService::required((string) $user['role']) && !MfaService::isEnabled((int) $user['id'])) {
+            Response::redirect('/admin/mfa');
+            return;
+        }
         Response::redirect('/admin');
     }
 

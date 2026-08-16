@@ -169,3 +169,8 @@ input.over { border-color: var(--danger) !important; }
 .stock-actions .inline-form { display: flex; gap: 0.3rem; align-items: center; }
 .stock-input { width: 4.5rem; padding: 0.3rem 0.4rem; background: var(--panel-2); border: 1px solid var(--border); border-radius: 6px; color: var(--text); }
 .stock-actions .btn { padding: 0.3rem 0.55rem; font-size: 0.8rem; white-space: nowrap; }
+
+/* MFA (M7) */
+.backup-codes { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.5rem; }
+.backup-codes li { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 0.5rem 0.75rem; text-align: center; letter-spacing: 0.08em; }
+.topbar .user { margin-left: 0.75rem; }
