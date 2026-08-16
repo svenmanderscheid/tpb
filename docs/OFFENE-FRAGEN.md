@@ -24,7 +24,10 @@ Claude Code liest diese Datei vor jedem Meilenstein und trägt eigene Fragen unt
 ## Vor M6b – Shop & Zahlung
 
 - [ ] Zahlungsanbieter-Entscheidung (gehostete Seite, signierte Webhooks, Gebühren, Auszahlungsrhythmus, Luxemburg-Zahlarten) – **Onboarding erst nach Gründung möglich**
-- [ ] Versand: nur Abholung oder zusätzlich Pauschale (`SHIPPING_FLAT_CENTS`)
+- [x] **Versand (Owner 2026-08-16):** Es wird versendet. **Premium-Lieferungen = Eigenlieferung** (selbst zugestellt, Hausetikett, kein Carrier). **Normale Lieferungen = günstigster externer Anbieter** (Carrier variabel, pro Sendung wählbar). Umsetzung: Versand-Grundgerüst + Hausetikett **jetzt** gebaut (Migration 051, DECISIONS #28); generische `CarrierAdapter`-Schnittstelle, „günstigster Anbieter" als Registry. **Noch offen für die Umsetzung:**
+    - [ ] **Carrier-Zugang(e)** für Standardversand (welche Anbieter kommen in die „günstigster"-Auswahl, API/Label-Format, Vertrag) – echte Carrier-Label + Tracking erst mit Zugang (wie Zahlung: nach Gründung).
+    - [ ] **Versandkosten-Logik** für Standardversand: feste Pauschale (`SHIPPING_FLAT_CENTS`) oder gewichts-/carrierabhängig? Bis dahin manuelle Kosteneingabe je Sendung.
+    - [ ] **Autodruck** (still) für Job-/Versandetiketten: lokaler Druck-Agent (QZ Tray/Print-Server) + Zieldrucker – spätere Ausbaustufe (§9.6 Stufe 1 bleibt bis dahin).
 - [ ] Rechnungszeitpunkt bei Shop-Vollzahlung – Fiduciaire-Bestätigung (Konzept 20.10)
 - [x] **Bestandsanzeige „noch X auf Lager"** (Owner 2026-08-15): Bestand = Rohlinge je Variante, Reserve je Variante (Default 3), Verfügbarkeit = max(0, Bestand − Reserve), Verkaufssperre bei ≤ 0. Umsetzung in **M6b** (siehe DECISIONS #21). **Noch offen für die Umsetzung:**
     - [ ] Verhalten bei **konfigurierten** Artikeln, wenn der Rohling-Bestand knapp ist: nur Warnung oder harte Sperre?

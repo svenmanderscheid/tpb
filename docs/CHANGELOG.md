@@ -124,3 +124,12 @@
 - **Tests:** `ProductionFlowTest` (3) → **84 Tests grün**, `composer audit` sauber
 - **Verifiziert:** CLI-Etikett-Render (JOB-2026-000001, 496×799 / 732×1181 px) visuell geprüft; Admin-Produktionsseiten
   200 (READY-Badge, Start-Button); Scan-Route weist ungültiges Token mit 404 ab
+
+## 2026-08-16 – Versand & Fulfillment vorgezogen (Owner-Wunsch, Branch m1-katalog-preis)
+- **Owner-Entscheidung:** Es wird versendet – **Premium = Eigenlieferung** (Hausetikett, kein Carrier), **Standard = günstigster externer Anbieter** (Carrier variabel). Echte Carrier-Anbindung + Tracking + stiller Autodruck bleiben extern blockiert (Zugang wie Zahlung erst nach Gründung). Siehe DECISIONS #28, OFFENE-FRAGEN.
+- **Migration 051** `shipments` (Out-of-band-Block, da 005/006 reserviert): Versandart, Carrier, Lieferadresse-Snapshot, Kosten, Tracking, Etikett-Asset, Zeitstempel (eine Sendung je Auftrag)
+- **Domäne `Shipping`:** `CarrierAdapter`-Schnittstelle + `HouseCarrier` + `CarrierRegistry::cheapest` („günstigster Anbieter"), `ShipmentRepo` (Adresse aus Kundenstamm), `ShippingService` (Versandart/Kosten, Fulfillment-Statusfluss §7 Abholung **oder** Versand, Hausetikett 100×150 mm mit Empfänger + Auftrags-Barcode/QR, Neudruck nur mit Grund)
+- **HTTP Admin:** Versand-Karte am Auftrag (Versandart, Lieferadresse, Kosten, Statusbuttons pack→ready→ship/collect→deliver, Etikett rendern/neu); Recht `tpb_manage_production`
+- **Tests:** `ShippingFlowTest` (5) → **89 Tests grün**, `composer audit` sauber
+- **Verifiziert:** HTTP-Flow (configure → pack → ship → Etikett) über echte CSRF/Session; Hausetikett-PDF (100×150 mm, einseitig) visuell geprüft
+- **Fix:** feste `height` an Etiketten-Views entfernt (verhinderte leere zweite PDF-Seite bei Job- und Versandetikett)

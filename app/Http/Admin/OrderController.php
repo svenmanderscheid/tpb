@@ -41,6 +41,13 @@ final class OrderController
         $orderId = (int) $order['id'];
         $customer = Db::run('SELECT * FROM customers WHERE id = ? LIMIT 1', [(int) $order['customer_id']])->fetch();
 
+        $shipment = \Tpb\Domain\Shipping\ShipmentRepo::findByOrderId($orderId);
+        $lastShipmentPrint = null;
+        if ($shipment !== null) {
+            $lp = Db::run("SELECT id FROM print_jobs WHERE entity_type='shipment' AND entity_id=? ORDER BY id DESC LIMIT 1", [(int) $shipment['id']])->fetchColumn();
+            $lastShipmentPrint = $lp !== false ? (int) $lp : null;
+        }
+
         Response::html(View::render('admin/orders/show', [
             'title'    => 'Auftrag ' . $order['order_number'],
             'nav'      => 'orders',
@@ -49,6 +56,8 @@ final class OrderController
             'items'    => OrderRepo::items($orderId),
             'artworks' => ArtworkRepo::listForOrder($orderId),
             'proofs'   => ProofRepo::listForOrder($orderId),
+            'shipment' => $shipment,
+            'last_shipment_print' => $lastShipmentPrint,
             'flash'    => $this->takeFlash(),
         ]));
     }

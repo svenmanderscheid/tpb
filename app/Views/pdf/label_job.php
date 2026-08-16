@@ -16,7 +16,7 @@ $l = $label;
   @page { margin: 0; }
   * { font-family: 'DejaVu Sans', sans-serif; }
   body { margin: 0; }
-  .lbl { width: 62mm; height: 100mm; padding: 2.5mm; box-sizing: border-box; font-size: 8pt; color: #000; }
+  .lbl { width: 62mm; padding: 2.5mm; box-sizing: border-box; font-size: 8pt; color: #000; }
   .jobno { font-size: 11pt; font-weight: bold; }
   .row { margin-top: 1.2mm; }
   .k { color: #333; }

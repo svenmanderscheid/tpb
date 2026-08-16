@@ -12,6 +12,7 @@ use Tpb\Http\Admin\OrderController;
 use Tpb\Http\Admin\PriceBookController;
 use Tpb\Http\Admin\ProductionController;
 use Tpb\Http\Admin\QuoteController;
+use Tpb\Http\Admin\ShippingController;
 use Tpb\Http\Admin\TechniqueController;
 use Tpb\Http\Api\ConfigController;
 use Tpb\Http\Api\PriceController;
@@ -110,6 +111,12 @@ return [
     ['POST', '/admin/job/{publicId}/menge',              [ProductionController::class, 'quantity'],       ['auth:tpb_manage_production', 'csrf']],
     ['POST', '/admin/job/{publicId}/etikett',            [ProductionController::class, 'label'],          ['auth:tpb_manage_production', 'csrf']],
     ['POST', '/admin/job/{publicId}/etikett/neu',        [ProductionController::class, 'reprint'],        ['auth:tpb_manage_production', 'csrf']],
+
+    // Versand & Fulfillment (DECISIONS #28) – Rechte: tpb_manage_production
+    ['POST', '/admin/auftrag/{publicId}/versand',              [ShippingController::class, 'configure'], ['auth:tpb_manage_production', 'csrf']],
+    ['POST', '/admin/auftrag/{publicId}/versand/status',       [ShippingController::class, 'advance'],   ['auth:tpb_manage_production', 'csrf']],
+    ['POST', '/admin/auftrag/{publicId}/versand/etikett',      [ShippingController::class, 'label'],     ['auth:tpb_manage_production', 'csrf']],
+    ['POST', '/admin/auftrag/{publicId}/versand/etikett/neu',  [ShippingController::class, 'reprint'],   ['auth:tpb_manage_production', 'csrf']],
 
     // Katalog (M1) – Rechte: tpb_manage_pricing (owner/admin)
     ['GET',  '/admin/katalog',                                       [CatalogController::class, 'products'],      ['auth:tpb_manage_pricing']],

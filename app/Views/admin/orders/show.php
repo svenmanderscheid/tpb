@@ -5,10 +5,19 @@
  * @var array<int,array<string,mixed>> $items
  * @var array<int,array<string,mixed>> $artworks
  * @var array<int,array<string,mixed>> $proofs
+ * @var array<string,mixed>|null $shipment
+ * @var int|null $last_shipment_print
  * @var array{type:string,text:string}|null $flash
  */
 use Tpb\Core\Csrf;
 use Tpb\Core\Money;
+
+$sh = $shipment ?? [];
+$method = (string) ($sh['method'] ?? 'pickup');
+$ful = (string) $order['cur_fulfillment'];
+$fulLabels = ['UNFULFILLED' => 'Offen', 'PACKING' => 'Wird gepackt', 'READY_FOR_PICKUP' => 'Abholbereit', 'READY_TO_SHIP' => 'Versandbereit', 'SHIPPED' => 'Versendet', 'COLLECTED' => 'Abgeholt', 'DELIVERED' => 'Zugestellt'];
+$isPickup = $method === 'pickup';
+$shv = static fn (string $k): string => e((string) ($sh[$k] ?? ''));
 
 $art = (string) $order['cur_artwork'];
 $currency = (string) $order['currency'];
@@ -117,6 +126,65 @@ $proofLabels = ['draft' => 'Entwurf', 'sent' => 'Versendet', 'approved' => 'Frei
                 <p class="muted">Proof ist versendet und wartet auf Kundenentscheidung.</p>
             <?php elseif ($art === 'LOCKED'): ?>
                 <p class="muted">Bereits freigegeben.</p>
+            <?php endif; ?>
+        </div>
+
+        <div class="card">
+            <h2>Versand <span class="status-badge <?= e(strtolower($ful)) ?>"><?= e($fulLabels[$ful] ?? $ful) ?></span></h2>
+
+            <form method="post" action="/admin/auftrag/<?= e((string) $order['public_id']) ?>/versand">
+                <?= Csrf::field() ?>
+                <div class="field">
+                    <label for="method">Versandart</label>
+                    <select id="method" name="method">
+                        <option value="pickup" <?= $method === 'pickup' ? 'selected' : '' ?>>Abholung</option>
+                        <option value="self_premium" <?= $method === 'self_premium' ? 'selected' : '' ?>>Eigenlieferung (Premium)</option>
+                        <option value="carrier_standard" <?= $method === 'carrier_standard' ? 'selected' : '' ?>>Standardversand (günstigster Anbieter)</option>
+                    </select>
+                </div>
+                <div class="field-row">
+                    <div class="field"><label for="carrier">Anbieter (Standardversand)</label><input type="text" id="carrier" name="carrier" value="<?= $shv('carrier') ?>"></div>
+                    <div class="field"><label for="shipping_cost">Versandkosten €</label><input type="text" id="shipping_cost" name="shipping_cost" value="<?= e(number_format((int) ($sh['shipping_cost_cents'] ?? 0) / 100, 2, ',', '')) ?>"></div>
+                </div>
+                <div class="field"><label for="recipient_company">Empfänger Firma</label><input type="text" id="recipient_company" name="recipient_company" value="<?= $shv('recipient_company') ?>"></div>
+                <div class="field"><label for="recipient_name">Empfänger Name</label><input type="text" id="recipient_name" name="recipient_name" value="<?= $shv('recipient_name') ?>"></div>
+                <div class="field"><label for="street">Straße</label><input type="text" id="street" name="street" value="<?= $shv('street') ?>"></div>
+                <div class="field-row">
+                    <div class="field"><label for="zip">PLZ</label><input type="text" id="zip" name="zip" value="<?= $shv('zip') ?>"></div>
+                    <div class="field"><label for="city">Ort</label><input type="text" id="city" name="city" value="<?= $shv('city') ?>"></div>
+                    <div class="field"><label for="country">Land</label><input type="text" id="country" name="country" value="<?= $shv('country') ?>"></div>
+                </div>
+                <button type="submit" class="btn secondary">Versanddaten speichern</button>
+            </form>
+
+            <?php
+            $step = null;
+            if ($ful === 'UNFULFILLED') { $step = ['pack', 'Packen']; }
+            elseif ($ful === 'PACKING') { $step = ['ready', $isPickup ? 'Abholbereit' : 'Versandbereit']; }
+            elseif ($ful === 'READY_FOR_PICKUP') { $step = ['collect', 'Als abgeholt markieren']; }
+            elseif ($ful === 'READY_TO_SHIP') { $step = ['ship', 'Als versendet markieren']; }
+            elseif ($ful === 'SHIPPED') { $step = ['deliver', 'Als zugestellt markieren']; }
+            ?>
+            <div class="actions-row mt">
+                <?php if ($step !== null): ?>
+                    <form class="inline-form" method="post" action="/admin/auftrag/<?= e((string) $order['public_id']) ?>/versand/status">
+                        <?= Csrf::field() ?><input type="hidden" name="action" value="<?= e($step[0]) ?>">
+                        <button type="submit" class="btn"><?= e($step[1]) ?></button>
+                    </form>
+                <?php else: ?>
+                    <p class="muted">Versand abgeschlossen.</p>
+                <?php endif; ?>
+            </div>
+
+            <?php if (!$isPickup): ?>
+                <form method="post" action="/admin/auftrag/<?= e((string) $order['public_id']) ?>/versand/etikett" class="mt"><?= Csrf::field() ?><button type="submit" class="btn secondary">Versandetikett rendern</button></form>
+                <?php if ($last_shipment_print !== null): ?>
+                    <form method="post" action="/admin/auftrag/<?= e((string) $order['public_id']) ?>/versand/etikett/neu" class="mt">
+                        <?= Csrf::field() ?><input type="hidden" name="reprint_of" value="<?= e((string) $last_shipment_print) ?>">
+                        <div class="field"><label for="sreason">Grund für Neudruck</label><input type="text" id="sreason" name="reason"></div>
+                        <button type="submit" class="btn secondary">Etikett neu drucken</button>
+                    </form>
+                <?php endif; ?>
             <?php endif; ?>
         </div>
     </aside>
