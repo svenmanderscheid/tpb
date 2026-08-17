@@ -105,6 +105,7 @@ final class ShopWebhookService
             PaymentIntentRepo::setStatus((int) $intent['id'], 'succeeded');
 
             $snapshot = json_decode((string) $order['customer_snapshot_json'], true) ?: [];
+            $lines = Db::run('SELECT description, qty, line_cents FROM order_items WHERE order_id = ? ORDER BY pos_no ASC', [(int) $order['id']])->fetchAll();
             $omail = [
                 'order_id'        => (int) $order['id'],
                 'order_public_id' => (string) $order['public_id'],
@@ -113,6 +114,8 @@ final class ShopWebhookService
                 'to_name'         => trim((string) ($snapshot['first_name'] ?? '') . ' ' . (string) ($snapshot['last_name'] ?? '')),
                 'total_cents'     => (int) $order['total_cents'],
                 'currency'        => (string) $order['currency'],
+                'lines'           => $lines,   // Vertragsinhalt (Bestellbestätigung, Kap. 12)
+                'is_shop'         => true,
             ];
             if (!empty($omail['to_email'])) {
                 Outbox::enqueue('mail.order_confirmed', array_merge($omail, MailTemplates::orderConfirmed($omail)), 'order_confirmed_' . (int) $order['id']);

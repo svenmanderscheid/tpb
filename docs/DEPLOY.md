@@ -29,6 +29,25 @@
 9. Externen **Uptime-Monitor** auf `GET /health` setzen.
 10. Smoke-Test im Anbieter-Testmodus (Checkout → Webhook → Rechnung/Mail), dann live schalten.
 
+## Checkout-Rechtsprüfung (Kapitel 12) – Abnahme-Checkliste
+
+Vor Go-live gegen den Live-Checkout prüfen (Code-Stand M6b/M7):
+
+- [ ] **Button-Lösung:** Der Bestell-Button trägt „Zahlungspflichtig bestellen" (`app/Views/site/checkout.php`).
+- [ ] **Endpreise:** Der zu zahlende Betrag inkl. Versand wird VOR der Bestellung angezeigt (Bezahlseite `/pay/...`), serverseitig berechnet (kein Client-Betrag).
+- [ ] **Pflicht-Checkboxen:** AGB + Widerruf sind Pflicht; Widerruf enthält den Hinweis auf das Erlöschen bei personalisierter Ware. Ohne Häkchen ist der Checkout serverseitig nicht absendbar (`CheckoutService`).
+- [ ] **Bestellbestätigung mit Vertragsinhalt:** Die Auftragsbestätigungs-Mail listet die bestellten Positionen, den Gesamtbetrag und den Widerrufshinweis (`MailTemplates::orderConfirmed`, `is_shop`).
+- [ ] **Rechtstexte** sind als `published` hinterlegt (nicht Platzhalter) und aus dem Checkout verlinkt.
+- [ ] **Widerrufsbelehrung Standard vs. personalisiert** juristisch geprüft.
+
+## Backup/Restore-Test (verbindlich vor Go-live)
+
+1. `php cli/backup.php` ausführen → prüfen, dass in `private/tpb/backups/` ein `*-<stamp>.sql.gz` und ein `private-<stamp>.tar.gz` liegen.
+2. In eine **leere Test-DB** zurückspielen: `gzip -dc <db>-<stamp>.sql.gz | mysql -u <user> <test-db>`.
+3. `php cli/healthcheck.php` gegen die wiederhergestellte DB → DB-Check „ok".
+4. Stichprobe: eine bekannte Rechnung/Order ist vorhanden und unverändert (Snapshot-Hash gleich).
+5. Ergebnis + Datum hier protokollieren. Restore = einziger Rollback-Weg (kein Down-Migrations-Mechanismus).
+
 ## Rollback
 
 - Kein Down-Migrations-Mechanismus. **Rollback = Restore** des letzten Backups (`private/tpb/backups/`) + Code-Stand zurücksetzen.

@@ -203,3 +203,12 @@
 - **Tests:** `AmendFlowTest` (keine neue Order, Snapshot-Hash unverändert, additiv, idempotent, Re-Proof) + `CapacityTest` (planned_min, Wochenaggregation) → **135 Tests grün**, `composer audit` sauber
 - **Verifiziert:** Admin-Seiten Kapazität/Produktion/Angebote 200
 - **Manuell (nicht automatisierbar):** Vertretungstest (zweiter Gründer führt Szenario 2 inkl. Nachtrag nach RUNBOOK.md durch) – Abnahmeschritt beim Deployment
+
+## 2026-08-16 – M7: Härtung (Teil 2: sudo-Modus + Rechts-/Betriebsdoku, Branch m1-katalog-preis)
+- **sudo-Modus** (`Domain/Auth/Sudo` + Router-Middleware `sudo`): kritische Aktionen (Rechnung ausstellen/gutschreiben, Preisbuch-/Kostenversion-Publish) verlangen eine frische Re-Auth (≤5 min) per Passwort **oder** TOTP; ist sie nicht frisch, rendert der Router `admin/sudo` (spiegelt alle ursprünglichen POST-Felder verdeckt + Passwortfeld) und sendet die Aktion nach Bestätigung erneut
+- **Checkout-Rechtsprüfung (Kap. 12):** **Bestellbestätigung mit Vertragsinhalt** – `MailTemplates::orderConfirmed` listet nun die bestellten Positionen + Gesamtbetrag und ergänzt bei Shop-Käufen (`is_shop`) den Widerrufshinweis (Erlöschen bei personalisierter Ware); `ShopWebhookService` lädt dazu die `order_items`. Abnahme-Checkliste (Button „Zahlungspflichtig bestellen", serverseitige Endpreise, Pflicht-Checkboxen, published Rechtstexte) in `docs/DEPLOY.md`
+- **Backup/Restore-Test** als verbindliche Prozedur in `docs/DEPLOY.md` (Dump → leere Test-DB → healthcheck → Snapshot-Stichprobe)
+- **Sicherheits-Checkliste teil-automatisiert:** `RouteSecurityTest` prüft deklarativ gegen `routes.php`, dass jede mutierende Admin-Route CSRF+Auth trägt und die kritischen Aktionen `sudo` – verhindert, dass eine ungeschützte Route durchrutscht; dokumentierte Ausnahmen: signaturgeprüfter Webhook + zustandslose `/api/`-JSON
+- **Tests:** `SudoTest` (isFresh/TTL, Passwort- + TOTP-Bestätigung, falsches Passwort) + `RouteSecurityTest` → **142 Tests grün**, `composer audit` sauber
+- **Verifiziert (echtes HTTP):** Publish ohne frische Re-Auth ⇒ „Kritische Aktion bestätigen"-Seite; falsches Passwort ⇒ bleibt auf sudo-Seite; korrektes Passwort ⇒ Aktion läuft durch (302)
+- **M7 abgeschlossen.** Noch beim Deployment (kein Code, DECISIONS #33): Seeds als voller End-to-End-Durchlauf (§13.2), Vertretungstest (manuell), konkrete Hostinger-Schritte, echte Fachwerte/Secrets

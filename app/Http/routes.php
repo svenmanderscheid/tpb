@@ -148,8 +148,8 @@ return [
     ['GET',  '/admin/rechnungen',                        [InvoiceController::class, 'index'],          ['auth:tpb_view_costs']],
     ['GET',  '/admin/rechnung/{publicId}',               [InvoiceController::class, 'show'],           ['auth:tpb_view_costs']],
     ['POST', '/admin/auftrag/{publicId}/rechnung',       [InvoiceController::class, 'createFromOrder'], ['auth:tpb_issue_invoices', 'csrf']],
-    ['POST', '/admin/rechnung/{publicId}/ausstellen',    [InvoiceController::class, 'issue'],           ['auth:tpb_issue_invoices', 'csrf']],
-    ['POST', '/admin/rechnung/{publicId}/gutschrift',    [InvoiceController::class, 'credit'],          ['auth:tpb_issue_invoices', 'csrf']],
+    ['POST', '/admin/rechnung/{publicId}/ausstellen',    [InvoiceController::class, 'issue'],           ['auth:tpb_issue_invoices', 'csrf', 'sudo']],
+    ['POST', '/admin/rechnung/{publicId}/gutschrift',    [InvoiceController::class, 'credit'],          ['auth:tpb_issue_invoices', 'csrf', 'sudo']],
 
     // Zahlungen (M6) – Recht: tpb_manage_finance
     ['POST', '/admin/auftrag/{publicId}/zahlung',        [PaymentController::class, 'record'],          ['auth:tpb_manage_finance', 'csrf']],
@@ -200,7 +200,7 @@ return [
     ['POST', '/admin/preisbuch/{version}/tier/loeschen', [PriceBookController::class, 'deleteTier'], ['auth:tpb_manage_pricing', 'csrf']],
     ['POST', '/admin/preisbuch/{version}/param',       [PriceBookController::class, 'setParam'],   ['auth:tpb_manage_pricing', 'csrf']],
     ['POST', '/admin/preisbuch/{version}/param/loeschen', [PriceBookController::class, 'deleteParam'], ['auth:tpb_manage_pricing', 'csrf']],
-    ['POST', '/admin/preisbuch/{version}/publish',     [PriceBookController::class, 'publish'],    ['auth:tpb_manage_pricing', 'csrf']],
+    ['POST', '/admin/preisbuch/{version}/publish',     [PriceBookController::class, 'publish'],    ['auth:tpb_manage_pricing', 'csrf', 'sudo']],
     ['POST', '/admin/preisbuch/{version}/retire',      [PriceBookController::class, 'retire'],     ['auth:tpb_manage_pricing', 'csrf']],
 
     // Kostenversionen (M1) mit Draft->Publish
@@ -210,5 +210,5 @@ return [
     ['POST', '/admin/kostenversion/{version}/saetze',  [CostVersionController::class, 'updateRates'], ['auth:tpb_manage_pricing', 'csrf']],
     ['POST', '/admin/kostenversion/{version}/item',    [CostVersionController::class, 'addItem'],   ['auth:tpb_manage_pricing', 'csrf']],
     ['POST', '/admin/kostenversion/{version}/item/loeschen', [CostVersionController::class, 'deleteItem'], ['auth:tpb_manage_pricing', 'csrf']],
-    ['POST', '/admin/kostenversion/{version}/publish', [CostVersionController::class, 'publish'],   ['auth:tpb_manage_pricing', 'csrf']],
+    ['POST', '/admin/kostenversion/{version}/publish', [CostVersionController::class, 'publish'],   ['auth:tpb_manage_pricing', 'csrf', 'sudo']],
 ];

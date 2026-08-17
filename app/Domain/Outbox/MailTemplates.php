@@ -37,21 +37,50 @@ final class MailTemplates
         return ['to' => (string) $p['to_email'], 'subject' => $subject, 'text' => $text, 'html' => $html];
     }
 
-    /** @param array<string,mixed> $p */
+    /**
+     * @param array<string,mixed> $p order_number, to_email, to_name, total_cents, currency,
+     *   optional: lines[{description,qty,line_cents}] (Vertragsinhalt, §Kap. 12), is_shop (bool).
+     */
     public static function orderConfirmed(array $p): array
     {
         $number = (string) $p['order_number'];
         $name = trim((string) ($p['to_name'] ?? '')) ?: 'Kundin/Kunde';
-        $total = Money::format((int) $p['total_cents'], (string) ($p['currency'] ?? 'EUR'));
+        $currency = (string) ($p['currency'] ?? 'EUR');
+        $total = Money::format((int) $p['total_cents'], $currency);
+        $isShop = !empty($p['is_shop']);
+        $lines = is_array($p['lines'] ?? null) ? $p['lines'] : [];
+
+        // Vertragsinhalt (Bestellbestätigung, Kapitel 12): bestellte Positionen auflisten.
+        $itemsText = '';
+        $itemsHtml = '';
+        if ($lines !== []) {
+            $itemsText = "\nBestellte Positionen:\n";
+            $itemsHtml = '<ul>';
+            foreach ($lines as $l) {
+                $line = (int) $l['qty'] . '× ' . (string) $l['description'] . ' – ' . Money::format((int) $l['line_cents'], $currency);
+                $itemsText .= "  - {$line}\n";
+                $itemsHtml .= '<li>' . e($line) . '</li>';
+            }
+            $itemsHtml .= '</ul>';
+        }
+
+        $intro = $isShop
+            ? "vielen Dank für Ihre Bestellung. Ihr Auftrag {$number} über {$total} ist eingegangen und bezahlt."
+            : "vielen Dank – wir haben Ihre Angebotsannahme erhalten. Ihr Auftrag {$number} über {$total} ist angelegt.";
+        $withdrawal = $isShop
+            ? "\nHinweis Widerruf: Bei individuell gestalteter/personalisierter Ware ist das Widerrufsrecht ausgeschlossen (siehe Widerrufsbelehrung)."
+            : '';
+        $withdrawalHtml = $isShop
+            ? '<p class="muted">Hinweis Widerruf: Bei individuell gestalteter/personalisierter Ware ist das Widerrufsrecht ausgeschlossen (siehe Widerrufsbelehrung).</p>'
+            : '';
 
         $subject = "Auftragsbestätigung {$number}";
-        $text = "Hallo {$name},\n\n"
-            . "vielen Dank – wir haben Ihre Angebotsannahme erhalten. Ihr Auftrag {$number} über {$total} ist angelegt.\n\n"
-            . "Wir melden uns mit den nächsten Schritten (Druckdaten/Freigabe).\n\n"
+        $text = "Hallo {$name},\n\n{$intro}\n{$itemsText}\n"
+            . "Wir melden uns mit den nächsten Schritten (Druckdaten/Freigabe).\n{$withdrawal}\n\n"
             . "Herzliche Grüße\nThe Printing Brothers";
         $html = '<p>Hallo ' . e($name) . ',</p>'
-            . '<p>vielen Dank – wir haben Ihre Angebotsannahme erhalten. Ihr Auftrag <strong>' . e($number) . '</strong> über <strong>' . e($total) . '</strong> ist angelegt.</p>'
-            . '<p>Wir melden uns mit den nächsten Schritten (Druckdaten/Freigabe).</p>'
+            . '<p>' . e($intro) . '</p>' . $itemsHtml
+            . '<p>Wir melden uns mit den nächsten Schritten (Druckdaten/Freigabe).</p>' . $withdrawalHtml
             . '<p>Herzliche Grüße<br>The Printing Brothers</p>';
 
         return ['to' => (string) $p['to_email'], 'subject' => $subject, 'text' => $text, 'html' => $html];

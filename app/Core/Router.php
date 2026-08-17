@@ -76,8 +76,43 @@ final class Router
                 RateLimit::enforce($bucket, Request::ip());
                 continue;
             }
+            if ($tag === 'sudo') {
+                self::enforceSudo();
+                continue;
+            }
             throw new \RuntimeException("Unknown middleware tag: {$tag}");
         }
+    }
+
+    /**
+     * sudo-Modus (§11): ist die Bestätigung frisch (≤5 min), passiert nichts. Sonst wird
+     * eine Bestätigungsseite gerendert, die die ursprüngliche Aktion (inkl. aller POST-Felder)
+     * zusammen mit einem Passwort-/TOTP-Feld an dieselbe URL erneut sendet.
+     */
+    private static function enforceSudo(): void
+    {
+        if (\Tpb\Domain\Auth\Sudo::isFresh()) {
+            return;
+        }
+        $uid = Auth::id();
+        $pw = Request::post('_sudo_password');
+        if ($uid !== null && $pw !== null && $pw !== '' && \Tpb\Domain\Auth\Sudo::confirm((int) $uid, $pw)) {
+            return; // Bestätigung erfolgreich – Aktion darf laufen
+        }
+
+        $fields = [];
+        foreach ($_POST as $k => $v) {
+            if ($k === '_sudo_password' || $k === '_csrf' || !is_string($v)) {
+                continue;
+            }
+            $fields[$k] = $v;
+        }
+        Response::html(View::render('admin/sudo', [
+            'action' => Request::path(),
+            'fields' => $fields,
+            'error'  => ($pw !== null && $pw !== '') ? 'Bestätigung fehlgeschlagen. Bitte erneut versuchen.' : null,
+        ], null), 200);
+        exit;
     }
 
     private static function normalizePath(string $path): string
