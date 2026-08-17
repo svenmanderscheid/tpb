@@ -9,16 +9,9 @@ use Tpb\Core\Csrf;
 
 $publicId = (string) $order['public_id'];
 $tokenQ = rawurlencode($token);
-?><!doctype html>
-<html lang="de">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Proof zu Auftrag <?= e((string) $order['order_number']) ?> – The Printing Brothers</title>
-    <link rel="stylesheet" href="/assets/css/admin.css">
-</head>
-<body>
-    <main class="container">
+?>
+<section class="section">
+    <div class="wrap">
         <h1>Druckfreigabe – Auftrag <?= e((string) $order['order_number']) ?>
             <span class="status-badge sent">Proof v<?= e((string) $proof['version_no']) ?></span>
         </h1>
@@ -55,7 +48,7 @@ $tokenQ = rawurlencode($token);
 
         <div class="card">
             <h2>Ihre Entscheidung</h2>
-            <div class="actions-row">
+            <div class="hero-actions">
                 <form method="post" action="/proof/<?= e($publicId) ?>/freigeben">
                     <?= Csrf::field() ?>
                     <input type="hidden" name="t" value="<?= e($token) ?>">
@@ -72,6 +65,5 @@ $tokenQ = rawurlencode($token);
                 <button type="submit" class="btn secondary">Änderung anfordern</button>
             </form>
         </div>
-    </main>
-</body>
-</html>
+    </div>
+</section>

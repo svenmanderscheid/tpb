@@ -40,7 +40,7 @@ final class CheckoutController
             'required'  => self::REQUIRED,
             'error'     => null,
             'old'       => [],
-        ], null));
+        ], 'layout/site'));
     }
 
     /** @param array<string,string> $params */
@@ -98,7 +98,7 @@ final class CheckoutController
         if ($intent === null) {
             throw new HttpException(404, 'Zahlung nicht gefunden.');
         }
-        Response::html(View::render('site/pay', ['intent' => $intent], null));
+        Response::html(View::render('site/pay', ['intent' => $intent], 'layout/site'));
     }
 
     /** „Zahlung simulieren": erzeugt ein signiertes Webhook-Event (wie der echte Anbieter). */
@@ -133,7 +133,7 @@ final class CheckoutController
             PaymentIntentRepo::setStatus((int) $intent['id'], 'canceled', 'customer_cancelled');
             \Tpb\Domain\Stock\StockService::releaseForOrder((int) $intent['order_id']); // Reservierung freigeben
         }
-        Response::html(View::render('site/checkout_result', ['kind' => 'cancelled'], null));
+        Response::html(View::render('site/checkout_result', ['kind' => 'cancelled'], 'layout/site'));
     }
 
     /** @param array<string,string> $params */
@@ -144,7 +144,7 @@ final class CheckoutController
         Response::html(View::render('site/checkout_result', [
             'kind' => 'paid',
             'order_number' => $order !== false ? (string) $order['order_number'] : '',
-        ], null));
+        ], 'layout/site'));
     }
 
     /** @param array<string,mixed> $config @param array<int,array<string,mixed>> $legalDocs @param array<string,mixed> $old */
@@ -152,7 +152,7 @@ final class CheckoutController
     {
         Response::html(View::render('site/checkout', [
             'config' => $config, 'legalDocs' => $legalDocs, 'required' => self::REQUIRED, 'error' => $error, 'old' => $old,
-        ], null), 422);
+        ], 'layout/site'), 422);
     }
 
     /** @param array<string,mixed> $d */

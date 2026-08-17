@@ -26,7 +26,7 @@ final class ProofViewController
     {
         [$order, $proof, $token] = $this->resolve($params, (string) (Request::query('t', '') ?? ''));
         if ($order === null) {
-            Response::html(View::render('site/proof_invalid', [], null), 404);
+            Response::html(View::render('site/proof_invalid', [], 'layout/site'), 404);
             return;
         }
 
@@ -35,7 +35,7 @@ final class ProofViewController
             'proof' => $proof,
             'items' => OrderRepo::configuredItems((int) $order['id']),
             'token' => $token,
-        ], null));
+        ], 'layout/site'));
     }
 
     /** @param array<string,string> $params */
@@ -44,11 +44,11 @@ final class ProofViewController
         $publicId = (string) ($params['publicId'] ?? '');
         try {
             ProofService::approve($publicId, (string) (Request::post('t', '') ?? ''));
-            Response::html(View::render('site/proof_result', ['kind' => 'approved'], null));
+            Response::html(View::render('site/proof_result', ['kind' => 'approved'], 'layout/site'));
         } catch (ProofAccessException) {
-            Response::html(View::render('site/proof_invalid', [], null), 404);
+            Response::html(View::render('site/proof_invalid', [], 'layout/site'), 404);
         } catch (ProofStateException $e) {
-            Response::html(View::render('site/proof_result', ['kind' => 'error', 'message' => $e->getMessage()], null), 409);
+            Response::html(View::render('site/proof_result', ['kind' => 'error', 'message' => $e->getMessage()], 'layout/site'), 409);
         }
     }
 
@@ -58,11 +58,11 @@ final class ProofViewController
         $publicId = (string) ($params['publicId'] ?? '');
         try {
             ProofService::requestChanges($publicId, (string) (Request::post('t', '') ?? ''), (string) (Request::post('comment', '') ?? ''));
-            Response::html(View::render('site/proof_result', ['kind' => 'changes'], null));
+            Response::html(View::render('site/proof_result', ['kind' => 'changes'], 'layout/site'));
         } catch (ProofAccessException) {
-            Response::html(View::render('site/proof_invalid', [], null), 404);
+            Response::html(View::render('site/proof_invalid', [], 'layout/site'), 404);
         } catch (ProofStateException $e) {
-            Response::html(View::render('site/proof_result', ['kind' => 'error', 'message' => $e->getMessage()], null), 409);
+            Response::html(View::render('site/proof_result', ['kind' => 'error', 'message' => $e->getMessage()], 'layout/site'), 409);
         }
     }
 

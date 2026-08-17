@@ -29,7 +29,7 @@ final class QuoteViewController
         $quote = QuoteRepo::findByPublicId($publicId);
 
         if ($quote === null || AccessTokenService::verify($token, QuoteService::TOKEN_PURPOSE, 'quote', (int) $quote['id']) === null) {
-            Response::html(View::render('site/quote_invalid', [], null), 404);
+            Response::html(View::render('site/quote_invalid', [], 'layout/site'), 404);
             return;
         }
 
@@ -45,7 +45,7 @@ final class QuoteViewController
             'snapshot' => $snapshot,
             'token'    => $token,
             'order'    => $order,
-        ], null));
+        ], 'layout/site'));
     }
 
     /** @param array<string,string> $params */
@@ -58,11 +58,11 @@ final class QuoteViewController
             Response::html(View::render('site/quote_result', [
                 'kind'         => 'accepted',
                 'order_number' => $result['order_number'],
-            ], null));
+            ], 'layout/site'));
         } catch (QuoteAccessException) {
-            Response::html(View::render('site/quote_invalid', [], null), 404);
+            Response::html(View::render('site/quote_invalid', [], 'layout/site'), 404);
         } catch (QuoteStateException $e) {
-            Response::html(View::render('site/quote_result', ['kind' => 'error', 'message' => $e->getMessage()], null), 409);
+            Response::html(View::render('site/quote_result', ['kind' => 'error', 'message' => $e->getMessage()], 'layout/site'), 409);
         }
     }
 
@@ -73,11 +73,11 @@ final class QuoteViewController
         $token = (string) (Request::post('t', '') ?? '');
         try {
             QuoteService::decline($publicId, $token);
-            Response::html(View::render('site/quote_result', ['kind' => 'declined'], null));
+            Response::html(View::render('site/quote_result', ['kind' => 'declined'], 'layout/site'));
         } catch (QuoteAccessException) {
-            Response::html(View::render('site/quote_invalid', [], null), 404);
+            Response::html(View::render('site/quote_invalid', [], 'layout/site'), 404);
         } catch (QuoteStateException $e) {
-            Response::html(View::render('site/quote_result', ['kind' => 'error', 'message' => $e->getMessage()], null), 409);
+            Response::html(View::render('site/quote_result', ['kind' => 'error', 'message' => $e->getMessage()], 'layout/site'), 409);
         }
     }
 

@@ -10,30 +10,24 @@ use Tpb\Core\Csrf;
 use Tpb\Core\Money;
 
 $status = (string) $intent['status'];
-?><!doctype html>
-<html lang="de">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Zahlung – Testmodus</title>
-    <link rel="stylesheet" href="/assets/css/admin.css">
-</head>
-<body>
-    <main class="container">
-        <div class="card">
-            <h1>Zahlung <span class="badge quarantine">TESTMODUS</span></h1>
+?>
+<section class="section">
+    <div class="wrap">
+        <div class="card pay-box">
+            <span class="tag">Testmodus</span>
+            <h1>Zahlung</h1>
             <p class="muted">Simulierte Anbieterseite – hier steht später die echte Bezahlseite des Zahlungsdienstleisters.</p>
-            <p class="price-total"><?= e(Money::format((int) $intent['amount_cents'], (string) $intent['currency'])) ?></p>
+            <div class="pay-amount"><?= e(Money::format((int) $intent['amount_cents'], (string) $intent['currency'])) ?></div>
 
             <?php if ($status === 'created'): ?>
-                <div class="actions-row">
+                <div class="stack">
                     <form method="post" action="/pay/<?= e((string) $intent['public_id']) ?>/simulieren">
                         <?= Csrf::field() ?>
-                        <button type="submit" class="btn">Zahlung simulieren (erfolgreich)</button>
+                        <button type="submit" class="btn block lg">Zahlung simulieren (erfolgreich)</button>
                     </form>
                     <form method="post" action="/pay/<?= e((string) $intent['public_id']) ?>/abbrechen">
                         <?= Csrf::field() ?>
-                        <button type="submit" class="btn secondary">Abbrechen</button>
+                        <button type="submit" class="btn secondary block">Abbrechen</button>
                     </form>
                 </div>
             <?php elseif ($status === 'succeeded'): ?>
@@ -44,6 +38,5 @@ $status = (string) $intent['status'];
                 <p><a class="btn" href="/">Zur Startseite</a></p>
             <?php endif; ?>
         </div>
-    </main>
-</body>
-</html>
+    </div>
+</section>

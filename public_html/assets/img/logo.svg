@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- PLATZHALTER-Logo (neutral). Ersetzen, sobald echtes Markenlogo vorliegt. Siehe docs/OFFENE-FRAGEN.md -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 40" role="img" aria-label="The Printing Brothers">
+  <rect x="0" y="4" width="32" height="32" rx="8" fill="#17171c"/>
+  <text x="16" y="27" font-family="Segoe UI, system-ui, sans-serif" font-size="16" font-weight="800" fill="#ff5a3c" text-anchor="middle">TPB</text>
+  <text x="42" y="20" font-family="Segoe UI, system-ui, sans-serif" font-size="15" font-weight="800" fill="#17171c">The Printing</text>
+  <text x="42" y="34" font-family="Segoe UI, system-ui, sans-serif" font-size="15" font-weight="800" fill="#6b6b76">Brothers</text>
+</svg>

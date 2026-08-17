@@ -14,16 +14,9 @@ $currency = (string) $quote['currency'];
 $statusLabels = ['DRAFT' => 'Entwurf', 'SENT' => 'Offen', 'ACCEPTED' => 'Angenommen', 'DECLINED' => 'Abgelehnt', 'EXPIRED' => 'Abgelaufen', 'CANCELLED' => 'Storniert'];
 $publicId = (string) $quote['public_id'];
 $tokenQ = rawurlencode($token);
-?><!doctype html>
-<html lang="de">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Angebot <?= e((string) ($quote['quote_number'] ?? '')) ?> – The Printing Brothers</title>
-    <link rel="stylesheet" href="/assets/css/admin.css">
-</head>
-<body>
-    <main class="container">
+?>
+<section class="section">
+    <div class="wrap">
         <h1>Angebot <?= e((string) ($quote['quote_number'] ?? '')) ?>
             <span class="status-badge <?= e(strtolower($status)) ?>"><?= e($statusLabels[$status] ?? $status) ?></span>
         </h1>
@@ -61,20 +54,22 @@ $tokenQ = rawurlencode($token);
         </div>
 
         <?php if ($status === 'SENT'): ?>
-            <div class="actions-row">
-                <form method="post" action="/angebot/<?= e($publicId) ?>/annehmen">
-                    <?= Csrf::field() ?>
-                    <input type="hidden" name="t" value="<?= e($token) ?>">
-                    <button type="submit" class="btn">Angebot annehmen</button>
-                </form>
-                <form method="post" action="/angebot/<?= e($publicId) ?>/ablehnen">
-                    <?= Csrf::field() ?>
-                    <input type="hidden" name="t" value="<?= e($token) ?>">
-                    <button type="submit" class="btn secondary">Ablehnen</button>
-                </form>
+            <div class="card">
+                <h2>Ihre Entscheidung</h2>
+                <div class="hero-actions">
+                    <form method="post" action="/angebot/<?= e($publicId) ?>/annehmen">
+                        <?= Csrf::field() ?>
+                        <input type="hidden" name="t" value="<?= e($token) ?>">
+                        <button type="submit" class="btn">Angebot annehmen</button>
+                    </form>
+                    <form method="post" action="/angebot/<?= e($publicId) ?>/ablehnen">
+                        <?= Csrf::field() ?>
+                        <input type="hidden" name="t" value="<?= e($token) ?>">
+                        <button type="submit" class="btn secondary">Ablehnen</button>
+                    </form>
+                </div>
+                <p class="muted small mt">Mit der Annahme kommt ein verbindlicher Auftrag zustande.</p>
             </div>
-            <p class="muted mt">Mit der Annahme kommt ein verbindlicher Auftrag zustande.</p>
         <?php endif; ?>
-    </main>
-</body>
-</html>
+    </div>
+</section>

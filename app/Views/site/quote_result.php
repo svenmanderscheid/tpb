@@ -4,18 +4,10 @@
  * @var string|null $order_number
  * @var string|null $message
  */
-$titles = ['accepted' => 'Angebot angenommen', 'declined' => 'Angebot abgelehnt', 'error' => 'Aktion nicht möglich'];
-?><!doctype html>
-<html lang="de">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><?= e($titles[$kind] ?? 'Angebot') ?> – The Printing Brothers</title>
-    <link rel="stylesheet" href="/assets/css/admin.css">
-</head>
-<body>
-    <main class="container">
-        <div class="card">
+?>
+<section class="section">
+    <div class="wrap">
+        <div class="card narrow center">
             <?php if ($kind === 'accepted'): ?>
                 <h1>Vielen Dank – Angebot angenommen!</h1>
                 <div class="alert ok">Ihr Auftrag <strong><?= e((string) ($order_number ?? '')) ?></strong> ist angelegt. Sie erhalten eine Bestätigung per E-Mail.</div>
@@ -29,6 +21,5 @@ $titles = ['accepted' => 'Angebot angenommen', 'declined' => 'Angebot abgelehnt'
             <?php endif; ?>
             <p><a class="btn" href="/">Zur Startseite</a></p>
         </div>
-    </main>
-</body>
-</html>
+    </div>
+</section>

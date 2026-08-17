@@ -24,13 +24,13 @@ final class SiteController
         Response::html(View::render('site/home', [
             'products'  => $this->activeProducts(),
             'legalDocs' => LegalDocRepo::allPublished('de'),
-        ], null));
+        ], 'layout/site'));
     }
 
     /** @param array<string,string> $params */
     public function index(array $params): void
     {
-        Response::html(View::render('site/index', ['products' => $this->activeProducts()], null));
+        Response::html(View::render('site/index', ['products' => $this->activeProducts()], 'layout/site'));
     }
 
     /** @param array<string,string> $params */
@@ -44,7 +44,7 @@ final class SiteController
         Response::html(View::render('site/legal', [
             'docs' => LegalDocRepo::allPublished('de'),
             'doc'  => $doc,
-        ], null));
+        ], 'layout/site'));
     }
 
     /** @return array<int,array<string,mixed>> */
@@ -103,6 +103,6 @@ final class SiteController
         Response::html(View::render('site/configurator', [
             'product'  => $product,
             'dataJson' => json_encode($data, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_THROW_ON_ERROR),
-        ], null));
+        ], 'layout/site'));
     }
 }

@@ -39,7 +39,7 @@ final class RequestController
             'required'  => self::REQUIRED_DOCS,
             'error'     => null,
             'old'       => [],
-        ], null));
+        ], 'layout/site'));
     }
 
     /** @param array<string,string> $params */
@@ -75,7 +75,7 @@ final class RequestController
             Response::html(View::render('site/request_form', [
                 'config' => $config, 'legalDocs' => $legalDocs, 'required' => self::REQUIRED_DOCS,
                 'error'  => $error, 'old' => $old,
-            ], null), 422);
+            ], 'layout/site'), 422);
             return;
         }
 
@@ -110,7 +110,7 @@ final class RequestController
             ]);
         });
 
-        Response::html(View::render('site/request_thanks', ['name' => trim($old['first_name'] . ' ' . $old['last_name'])], null));
+        Response::html(View::render('site/request_thanks', ['name' => trim($old['first_name'] . ' ' . $old['last_name'])], 'layout/site'));
     }
 
     /** @param array<string,string> $d */
