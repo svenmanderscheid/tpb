@@ -204,6 +204,15 @@
 - **Verifiziert:** Admin-Seiten Kapazität/Produktion/Angebote 200
 - **Manuell (nicht automatisierbar):** Vertretungstest (zweiter Gründer führt Szenario 2 inkl. Nachtrag nach RUNBOOK.md durch) – Abnahmeschritt beim Deployment
 
+## 2026-08-17 – Design: Storefront-Theme, Konfigurator-Vorschau, Admin-Feinschliff (Branch m1-katalog-preis)
+- **Eigenes Kunden-Theme** (`public_html/assets/css/site.css`): helles, markentaugliches Storefront-Design, getrennt vom dunklen Admin-Theme. Hero mit Gradient, Produktraster mit Karten-Hover, Formulare, Checkout-Summary, Footer – responsiv, CSP-streng (keine Inline-Styles/-Scripts).
+- **Gemeinsames Site-Layout** (`app/Views/layout/site.php`): Header mit Logo + Navigation, Footer mit Rechtslinks. Alle **17 Kunden-Views** von dupliziertem `<html>`-Gerüst auf content-only umgebaut; Site-Controller rendern jetzt mit `layout/site`.
+- **Platzhalter-Logo** `assets/img/logo.svg` (neutral, ersetzbar) – auch als Favicon (Storefront + Admin), behebt `/favicon.ico`-404.
+- **Konfigurator-Live-Vorschau** (`configurator.js`): SVG-Mockup (T-Shirt/Hoodie), das live auf **Farbe** (`color_code`-Hex oder Farbnamen-Mapping), **Größe** und **platzierte Motive** reagiert (Druckfläche, Motiv-Rechtecke Front, Rückseiten-Hinweis, Farb-Swatch als SVG). Der „inktracker-Effekt" der Sofort-Vorschau.
+- **Admin-Feinschliff** (`admin.css`, additiv): sticky Topbar mit Markenpunkt, Karten-/Kachel-Schatten, klarere Nav-Aktivzustände, Button-Präsenz, Tabellen-Zeilen-Hover.
+- **Marke = Platzhalter** (Owner-Freigabe „neutrale Platzhalter" 2026-08-17): Logo, Farben (`#ff5a3c`/`#17171c`), Schrift, Produktbilder – alle klar markiert und in `docs/OFFENE-FRAGEN.md` zum Ersetzen gelistet, nichts erfunden.
+- **Verifiziert:** Storefront-Seiten (Home/Produkte/Konfigurator/Checkout/Rechtliches) HTTP 200 im neuen Theme; Konfigurator-Vorschau im echten Browser gerendert, **keine CSP-Verstöße, keine Konsolenfehler**; Admin-Login mit Favicon + Theme; **142 Tests grün**.
+
 ## 2026-08-16 – M7: Härtung (Teil 2: sudo-Modus + Rechts-/Betriebsdoku, Branch m1-katalog-preis)
 - **sudo-Modus** (`Domain/Auth/Sudo` + Router-Middleware `sudo`): kritische Aktionen (Rechnung ausstellen/gutschreiben, Preisbuch-/Kostenversion-Publish) verlangen eine frische Re-Auth (≤5 min) per Passwort **oder** TOTP; ist sie nicht frisch, rendert der Router `admin/sudo` (spiegelt alle ursprünglichen POST-Felder verdeckt + Passwortfeld) und sendet die Aktion nach Bestätigung erneut
 - **Checkout-Rechtsprüfung (Kap. 12):** **Bestellbestätigung mit Vertragsinhalt** – `MailTemplates::orderConfirmed` listet nun die bestellten Positionen + Gesamtbetrag und ergänzt bei Shop-Käufen (`is_shop`) den Widerrufshinweis (Erlöschen bei personalisierter Ware); `ShopWebhookService` lädt dazu die `order_items`. Abnahme-Checkliste (Button „Zahlungspflichtig bestellen", serverseitige Endpreise, Pflicht-Checkboxen, published Rechtstexte) in `docs/DEPLOY.md`

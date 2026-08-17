@@ -59,6 +59,17 @@ Claude Code liest diese Datei vor jedem Meilenstein und trägt eigene Fragen unt
 - [ ] **Vereins-/Broker-Portal** (wiederkehrende Kunden sehen eigene Angebote/Aufträge) gewünscht? (Adaption #6, M8+)
 - [ ] **Lieferanten-Preisimport** (Adaption #4): welche LU/EU-Lieferanten, welches CSV-Exportformat? → speist neue `cost_version` mit Diff-Vorschau.
 
+## Design / Marke (Storefront-Theme, 2026-08-17)
+
+Das Kunden-Theme (`public_html/assets/css/site.css`, `app/Views/layout/site.php`) wurde mit **neutralen Platzhaltern** gebaut (Owner-Freigabe „neutrale Platzhalter" 2026-08-17). Zu ersetzen, sobald echte Markenvorgaben vorliegen – **nichts davon ist erfunden, alles klar als Platzhalter markiert**:
+
+- [ ] **Logo:** `public_html/assets/img/logo.svg` ist ein neutraler Text-Platzhalter („TPB / The Printing Brothers"). Echtes Logo (SVG bevorzugt) liefern.
+- [ ] **Markenfarben:** Akzent = Platzhalter-Orange `#ff5a3c`, Ink `#17171c` (CSS-Variablen in `site.css`). Verbindliche Hex-Werte festlegen.
+- [ ] **Hausschrift:** aktuell System-Font (`Segoe UI`/system-ui). Falls Wunschschrift: als lokal gehostete Datei einbinden (kein externes CDN wegen CSP).
+- [ ] **Produktfotos:** aktuell generische SVG-Silhouetten (T-Shirt/Hoodie). Echte Produktbilder je Produkt/Variante wären ein Upgrade.
+- [ ] **Konfigurator-Farbvorschau:** nutzt `product_variants.color_code`, wenn es ein Hex-Wert ist; sonst Fallback über Farbnamen-Mapping in `configurator.js` (`NAME_HEX`). **Empfehlung:** je Variante einen echten Hex in `color_code` pflegen, dann ist die Vorschau exakt.
+- [ ] **Impressum/Firmenzeile im Footer:** Platzhaltertext; echte Rechtsform/Anschrift aus `business_settings.seller.snapshot` übernehmen.
+
 ## Von Claude Code eingetragene Fragen
 
 ### M1 – Preis-Engine (§6): Klärungsbedarf, aktuell mit dokumentierten Default-Annahmen umgesetzt

@@ -179,3 +179,56 @@ input.over { border-color: var(--danger) !important; }
 .status-badge.cap-green { color: #9be7a6; border-color: #2f5f38; }
 .status-badge.cap-yellow { color: #ffcf70; border-color: #6b571f; }
 .status-badge.cap-red { color: #ffb4ae; border-color: #6b2f2f; }
+
+/* ===========================================================================
+   Feinschliff (additiv) – craftier Dark-Theme ohne Klassenänderungen.
+   ========================================================================= */
+:root { --shadow: 0 1px 2px rgba(0,0,0,.25), 0 8px 28px rgba(0,0,0,.22); }
+
+body {
+  background:
+    radial-gradient(900px 500px at 100% -10%, rgba(76,139,245,.10), transparent 60%),
+    var(--bg);
+  min-height: 100vh;
+}
+
+/* Sticky, abgesetzte Topbar mit Logo */
+.topbar {
+  position: sticky; top: 0; z-index: 30;
+  background: rgba(23,26,33,.88);
+  backdrop-filter: saturate(150%) blur(8px);
+  box-shadow: 0 1px 0 rgba(255,255,255,.03), 0 6px 20px rgba(0,0,0,.28);
+}
+.topbar .brand { display: inline-flex; align-items: center; gap: .55rem; }
+.topbar .brand::before {
+  content: ""; width: 22px; height: 22px; border-radius: 6px; flex: none;
+  background: linear-gradient(135deg, var(--accent), #7db0ff);
+}
+
+/* Karten & Kacheln mit Tiefe */
+.card, .kpi, .chart { box-shadow: var(--shadow); }
+.card { transition: border-color .15s ease; }
+
+/* Navigation: klarere Aktiv-/Hover-Zustände */
+.mainnav a { font-weight: 600; transition: background .12s ease, color .12s ease; }
+.mainnav a.active { box-shadow: inset 0 -2px 0 var(--accent); border-radius: 8px 8px 0 0; }
+
+/* Buttons: etwas Präsenz */
+.btn { font-weight: 600; box-shadow: 0 2px 8px rgba(76,139,245,.25); transition: background .15s ease, transform .06s ease; }
+.btn:hover { box-shadow: 0 4px 14px rgba(76,139,245,.32); }
+.btn:active { transform: translateY(1px); }
+.btn.secondary { box-shadow: none; }
+
+/* Tabellen: Zeilen-Hover für Lesbarkeit */
+tbody tr { transition: background .1s ease; }
+tbody tr:hover { background: rgba(255,255,255,.03); }
+
+/* KPI-Werte tabellarisch */
+.kpi .value { font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+
+/* Login: Markenpunkt vor dem Schriftzug */
+.login-wrap .brand { display: inline-flex; align-items: center; justify-content: center; gap: .55rem; }
+.login-wrap .brand::before {
+  content: ""; width: 26px; height: 26px; border-radius: 7px;
+  background: linear-gradient(135deg, var(--accent), #7db0ff);
+}

@@ -14,6 +14,7 @@ $activeNav = $nav ?? '';
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= e($pageTitle) ?> – The Printing Brothers</title>
+    <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/assets/css/admin.css">
 </head>
 <body>
