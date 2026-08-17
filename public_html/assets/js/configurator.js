@@ -34,6 +34,112 @@ function field(labelText, control) {
   return el('div', { class: 'field' }, [el('label', { text: labelText }), control]);
 }
 
+// ---- Live-Vorschau (SVG-Mockup) -------------------------------------------
+// PLATZHALTER-Farbzuordnung, bis echte Hex-Codes je Variante gepflegt sind
+// (color_code wird bevorzugt genutzt, wenn es ein Hex-Wert ist). OFFENE-FRAGEN.md.
+const NAME_HEX = [
+  ['weiß', '#ffffff'], ['weiss', '#ffffff'], ['white', '#ffffff'],
+  ['schwarz', '#1b1b1f'], ['black', '#1b1b1f'],
+  ['navy', '#1f2a44'], ['marine', '#1f2a44'],
+  ['royal', '#2f6fd8'], ['blau', '#2f6fd8'], ['blue', '#2f6fd8'],
+  ['rot', '#d23b34'], ['red', '#d23b34'], ['bordeaux', '#7a1f2b'],
+  ['grün', '#2f9e44'], ['gruen', '#2f9e44'], ['green', '#2f9e44'],
+  ['gelb', '#f4c542'], ['yellow', '#f4c542'],
+  ['orange', '#ff7a1a'],
+  ['pink', '#e85aad'], ['rosa', '#f2a0c4'],
+  ['lila', '#7d4bd8'], ['purple', '#7d4bd8'], ['violett', '#7d4bd8'],
+  ['türkis', '#1bb5a0'], ['tuerkis', '#1bb5a0'], ['petrol', '#1b6b78'],
+  ['grau', '#9aa0a6'], ['grey', '#9aa0a6'], ['gray', '#9aa0a6'], ['anthrazit', '#3a3d42'],
+  ['braun', '#7a5230'], ['brown', '#7a5230'], ['beige', '#e8dcc0'], ['sand', '#d9c9a3'],
+];
+
+function resolveHex(v) {
+  if (!v) return '#d9d9d6';
+  const code = (v.color_code || '').trim();
+  if (/^#?[0-9a-fA-F]{6}$/.test(code)) return code[0] === '#' ? code : ('#' + code);
+  const name = (v.color_name || '').toLowerCase();
+  for (const [k, hex] of NAME_HEX) if (name.includes(k)) return hex;
+  return '#d9d9d6';
+}
+
+function luminance(hex) {
+  const h = hex.replace('#', '');
+  const r = parseInt(h.slice(0, 2), 16) / 255, g = parseInt(h.slice(2, 4), 16) / 255, b = parseInt(h.slice(4, 6), 16) / 255;
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+function selectedVariant() {
+  const sku = Object.keys(state.sizes).find((s) => state.sizes[s] > 0);
+  return (sku ? data.variants.find((x) => x.sku === sku) : data.variants[0]) || null;
+}
+
+function sideOf(code) {
+  const p = (data.placements || []).find((x) => x.code === code);
+  return p ? (p.side || 'front') : 'front';
+}
+
+const PRINT = { x: 72, y: 80, w: 56, h: 72 };
+
+function garmentPath(isHoodie) {
+  // Front-Silhouette in viewBox 0 0 200 224.
+  const body = 'M70 34 L54 28 L28 48 L44 70 L60 60 L60 196 A6 6 0 0 0 66 202 L134 202 A6 6 0 0 0 140 196 L140 60 L156 70 L172 48 L146 28 L130 34 C122 50 78 50 70 34 Z';
+  return body;
+}
+
+function renderPreview() {
+  const stage = document.getElementById('cfg-preview');
+  if (!stage) return;
+  const v = selectedVariant();
+  const fill = resolveHex(v);
+  const isHoodie = ((product.name || '') + ' ' + (product.type || '')).toLowerCase().includes('hoodie');
+  const dark = luminance(fill) < 0.5;
+  const outline = fill.toLowerCase() === '#ffffff' ? '#d0cfca' : 'rgba(0,0,0,.18)';
+  const ink = dark ? 'rgba(255,255,255,.85)' : 'rgba(0,0,0,.5)';
+  const seam = dark ? 'rgba(255,255,255,.22)' : 'rgba(0,0,0,.12)';
+
+  const parts = [];
+  parts.push(`<svg viewBox="0 0 200 224" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Vorschau">`);
+  parts.push(`<path d="${garmentPath(isHoodie)}" fill="${fill}" stroke="${outline}" stroke-width="2" stroke-linejoin="round"/>`);
+  // Kragen
+  parts.push(`<path d="M78 40 Q100 58 122 40" fill="none" stroke="${seam}" stroke-width="2"/>`);
+  if (isHoodie) {
+    parts.push(`<path d="M80 38 Q100 66 120 38 L118 30 Q100 50 82 30 Z" fill="${fill}" stroke="${outline}" stroke-width="2" stroke-linejoin="round"/>`);
+    parts.push(`<line x1="94" y1="52" x2="92" y2="78" stroke="${seam}" stroke-width="2"/><line x1="106" y1="52" x2="108" y2="78" stroke="${seam}" stroke-width="2"/>`);
+    parts.push(`<path d="M72 150 L128 150 L124 176 L76 176 Z" fill="none" stroke="${seam}" stroke-width="2"/>`);
+  }
+  // Druckfläche (dezent gestrichelt)
+  parts.push(`<rect x="${PRINT.x}" y="${PRINT.y}" width="${PRINT.w}" height="${PRINT.h}" rx="3" fill="none" stroke="${ink}" stroke-width="1" stroke-dasharray="3 3" opacity="0.5"/>`);
+
+  // Motive (Front)
+  const frontLayers = (state.layers || []).filter((l) => l.placement_code && sideOf(l.placement_code) === 'front');
+  const scale = PRINT.w / 320;
+  frontLayers.forEach((l) => {
+    let w = l.width_mm ? Math.max(10, Math.min(PRINT.w, parseFloat(l.width_mm) * scale)) : PRINT.w * 0.62;
+    let h = l.height_mm ? Math.max(10, Math.min(PRINT.h, parseFloat(l.height_mm) * scale)) : PRINT.h * 0.5;
+    let cx = PRINT.x + PRINT.w / 2 + (l.offset_x_mm ? parseFloat(l.offset_x_mm) * scale : 0);
+    let cy = PRINT.y + PRINT.h / 2 + (l.offset_y_mm ? parseFloat(l.offset_y_mm) * scale : 0);
+    let x = Math.max(PRINT.x, Math.min(PRINT.x + PRINT.w - w, cx - w / 2));
+    let y = Math.max(PRINT.y, Math.min(PRINT.y + PRINT.h - h, cy - h / 2));
+    const has = !!l.asset_public_id;
+    parts.push(`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" rx="2" fill="${has ? 'rgba(255,90,60,.16)' : 'none'}" stroke="#ff5a3c" stroke-width="1.5" stroke-dasharray="${has ? '0' : '4 3'}"/>`);
+    parts.push(`<text x="${(x + w / 2).toFixed(1)}" y="${(y + h / 2 + 3).toFixed(1)}" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="8" fill="#d8340f">${has ? '✓ Motiv' : l.placement_code}</text>`);
+  });
+  parts.push(`</svg>`);
+  stage.innerHTML = parts.join('');
+
+  // Meta-Chips: Farbe + Rückseiten-Hinweis
+  const meta = document.getElementById('cfg-preview-meta');
+  if (meta) {
+    const chips = [];
+    if (v && (v.color_name || v.color_code)) {
+      chips.push(`<span class="swatch"><svg width="14" height="14" aria-hidden="true"><rect width="14" height="14" rx="3" fill="${fill}" stroke="rgba(0,0,0,.15)"/></svg>${(v.color_name || fill)}</span>`);
+    }
+    const back = (state.layers || []).filter((l) => l.placement_code && sideOf(l.placement_code) !== 'front').length;
+    if (back > 0) chips.push(`<span class="swatch">+${back} auf Rückseite/Ärmel</span>`);
+    meta.innerHTML = chips.join('');
+  }
+}
+
 // ---- Formularaufbau --------------------------------------------------------
 
 let layersBox, unitsBox;
@@ -228,6 +334,7 @@ function payload(includeGuest) {
 
 let priceTimer = null;
 function schedulePrice() {
+  renderPreview();            // Vorschau reagiert sofort
   if (priceTimer) clearTimeout(priceTimer);
   priceTimer = setTimeout(price, 400);
 }
@@ -315,5 +422,6 @@ document.getElementById('cfg-save').addEventListener('click', save);
 (async function init() {
   if (state.draft) await loadDraft(state.draft);
   renderForm();
+  renderPreview();
   price();
 })();
