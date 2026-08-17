@@ -106,6 +106,18 @@ $proofLabels = ['draft' => 'Entwurf', 'sent' => 'Versendet', 'approved' => 'Frei
             <?php endif; ?>
         </div>
 
+        <?php if (Authz::can('tpb_manage_quotes') && $order['cancelled_at'] === null && $order['completed_at'] === null): ?>
+        <div class="card">
+            <h2>Nachtrag</h2>
+            <p class="muted">Zusatzpositionen im Konfigurator als Entwurf speichern, dann die Entwurfs-ID hier eintragen. Preis nach aktuellem Preisbuch; die Positionen werden bei Annahme an diesen Auftrag angehängt.</p>
+            <form method="post" action="/admin/auftrag/<?= e((string) $order['public_id']) ?>/nachtrag">
+                <?= Csrf::field() ?>
+                <div class="field"><label for="amendcfg">Entwurfs-ID (Konfiguration)</label><input type="text" id="amendcfg" name="config"></div>
+                <button type="submit" class="btn secondary">Nachtragsangebot erstellen</button>
+            </form>
+        </div>
+        <?php endif; ?>
+
         <div class="card">
             <h2>Produktion</h2>
             <form method="post" action="/admin/auftrag/<?= e((string) $order['public_id']) ?>/produktion">

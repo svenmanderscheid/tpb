@@ -231,6 +231,8 @@ function seed_m6_basics(): void
         'shipping.free_national_threshold_cents' => '5000',
         'shipping.national_carrier'              => '"Post Luxembourg"',
         'shipping.international_carrier'          => '"DHL"',
+        // Wochenkapazität (M9, Platzhalter 40 h) für die Kapazitätsampel.
+        'capacity.week_minutes'                  => '2400',
     ] as $k => $v) {
         \Tpb\Core\Db::run(
             "INSERT INTO business_settings (setting_key, value_json, updated_at)

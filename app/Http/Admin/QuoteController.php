@@ -52,6 +52,31 @@ final class QuoteController
         }
     }
 
+    /** Nachtragsangebot aus einem Auftrag (§7, M9): referenziert die Order, Preisbuch aktuell. @param array<string,string> $params */
+    public function createAmend(array $params): void
+    {
+        $order = Db::run('SELECT id, public_id FROM orders WHERE public_id = ? LIMIT 1', [$params['publicId'] ?? ''])->fetch();
+        if ($order === false) {
+            throw new HttpException(404, 'Auftrag nicht gefunden.');
+        }
+        $configPublic = trim((string) Request::post('config', ''));
+        $cfg = $configPublic !== '' ? Db::run('SELECT id FROM configurations WHERE public_id = ? LIMIT 1', [$configPublic])->fetch() : false;
+        if ($cfg === false) {
+            $this->flash('error', 'Konfiguration (Entwurf) nicht gefunden. Bitte zuerst im Konfigurator die Nachtragspositionen speichern und die Entwurfs-ID eintragen.');
+            Response::redirect('/admin/auftrag/' . $order['public_id']);
+            return;
+        }
+        try {
+            $quote = QuoteService::createFromConfiguration((int) $cfg['id'], Auth::id(), (int) $order['id']);
+            $this->flash('ok', 'Nachtragsangebot als Entwurf erstellt. Bitte prüfen und versenden.');
+            Response::redirect('/admin/angebot/' . $quote['public_id']);
+            return;
+        } catch (\Throwable $e) {
+            $this->flash('error', 'Nachtrag konnte nicht erstellt werden: ' . $e->getMessage());
+            Response::redirect('/admin/auftrag/' . $order['public_id']);
+        }
+    }
+
     /** @param array<string,string> $params */
     public function show(array $params): void
     {

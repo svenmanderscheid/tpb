@@ -30,6 +30,9 @@ $activeNav = $nav ?? '';
             <?php if (Authz::can('tpb_manage_production')): ?>
                 <a href="/admin/produktion" class="<?= $activeNav === 'production' ? 'active' : '' ?>">Produktion</a>
             <?php endif; ?>
+            <?php if (Authz::can('tpb_manage_production')): ?>
+                <a href="/admin/kapazitaet" class="<?= $activeNav === 'capacity' ? 'active' : '' ?>">Kapazität</a>
+            <?php endif; ?>
             <?php if (Authz::can('tpb_manage_pricing')): ?>
                 <a href="/admin/katalog" class="<?= $activeNav === 'catalog' ? 'active' : '' ?>">Katalog</a>
             <?php endif; ?>

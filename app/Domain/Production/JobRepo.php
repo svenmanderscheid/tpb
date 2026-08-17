@@ -31,16 +31,18 @@ final class JobRepo
 
         $created = [];
         $now = Clock::nowUtcSeconds();
-        $items = Db::run('SELECT id, config_snapshot_json FROM order_items WHERE order_id = ? ORDER BY pos_no ASC', [$orderId])->fetchAll();
+        $cv = \Tpb\Domain\Pricing\PricingRepo::activeCostVersion();
+        $items = Db::run('SELECT id, product_id, qty, config_snapshot_json FROM order_items WHERE order_id = ? ORDER BY pos_no ASC', [$orderId])->fetchAll();
         foreach ($items as $item) {
             $itemId = (int) $item['id'];
             $route = self::routeFor($item['config_snapshot_json']);
+            $plannedMin = self::plannedMinutes($cv, $item);
             $publicId = Ulid::generate();
             $jobNumber = NumberSequence::next('job', 'JOB');
             Db::run(
-                'INSERT INTO production_jobs (public_id, job_number, order_id, order_item_id, status, route, created_at, updated_at)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-                [$publicId, $jobNumber, $orderId, $itemId, 'BLOCKED', $route, $now, $now]
+                'INSERT INTO production_jobs (public_id, job_number, order_id, order_item_id, status, route, planned_min, created_at, updated_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                [$publicId, $jobNumber, $orderId, $itemId, 'BLOCKED', $route, $plannedMin, $now, $now]
             );
             $jobId = (int) Db::pdo()->lastInsertId();
             Status::transition('production_job', $jobId, 'production', null, 'BLOCKED', ['actor_user_id' => $actorUserId]);
@@ -97,6 +99,29 @@ final class JobRepo
             'SELECT event_type, step, qty, minutes, note, occurred_at FROM production_events WHERE job_id = ? ORDER BY id DESC',
             [$jobId]
         )->fetchAll();
+    }
+
+    /**
+     * Geplante Minuten je Job (§11.7): SETUP_MIN + (UNIT_MIN + MACHINE_MIN) × Menge,
+     * Sätze aus der aktiven Kostenversion (Technik, sonst Produkt). Für die Kapazitätsplanung.
+     *
+     * @param array<string,mixed> $item
+     */
+    private static function plannedMinutes(?\Tpb\Domain\Pricing\CostVersion $cv, array $item): ?int
+    {
+        if ($cv === null) {
+            return null;
+        }
+        $qty = (int) $item['qty'];
+        $productId = (int) $item['product_id'];
+        $techId = null;
+        $cfg = $item['config_snapshot_json'] !== null ? json_decode((string) $item['config_snapshot_json'], true) : null;
+        if (is_array($cfg) && !empty($cfg['technique_code'])) {
+            $techId = \Tpb\Domain\Catalog\TechniqueRepo::idByCode(strtoupper((string) $cfg['technique_code']));
+        }
+        $cand = [['technique', $techId], ['product', $productId]];
+        $min = $cv->itemAny($cand, 'SETUP_MIN') + ($cv->itemAny($cand, 'UNIT_MIN') + $cv->itemAny($cand, 'MACHINE_MIN')) * $qty;
+        return $min > 0 ? $min : null;
     }
 
     private static function routeFor(mixed $configSnapshotJson): string

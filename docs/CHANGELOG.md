@@ -195,3 +195,11 @@
 - **Fix:** SQL-Alias `lines` (reserviertes Wort in MariaDB) → `line_count` (im HTTP-Smoke gefunden, von Tests nicht abgedeckt)
 - **Verifiziert (echtes HTTP):** Import 2 Zeilen; identische Datei erneut ⇒ 0 neu; Bankseite + Dashboard 200
 - **DoD erfüllt:** identische Datei ⇒ 0 neue Zeilen; Referenzzeile ⇒ korrekter Vorschlag; Bestätigung bucht in einer Transaktion; keine Buchung ohne Bestätigung; mehrfacher Mahnlauf ohne Dublette; CSV-/CAMT-Fixtures grün
+
+## 2026-08-16 – M9: Nachträge & Kapazität (Branch m1-katalog-preis)
+- **Nachtragsangebot** (`amends_order_id`): `QuoteService::createFromConfiguration(..., amendsOrderId)` bindet an bestehende Order, Preis nach aktuellem Preisbuch; Annahme (§7) **hängt Positionen an** (`OrderRepo::appendFromSnapshot`), **keine neue Order**, Summe additiv, **idempotent**; konfigurierter Nachtrag bei gesperrtem Artwork ⇒ neuer Proof-Zyklus (`artwork LOCKED→MISSING`)
+- **Kapazität:** `planned_min` je Job aus der Kostenversion; `CapacityReport` (Σ je Fälligkeitswoche vs. `capacity.week_minutes`, Ampel, **kein Auto-Block**); Admin `/admin/kapazitaet`, Termin je Job (`/admin/job/{id}/termin`); Seed `capacity.week_minutes=2400`
+- **HTTP:** Nachtrag-Karte am Auftrag (`/admin/auftrag/{id}/nachtrag`), Kapazität-Nav; Rechte tpb_manage_quotes/tpb_manage_production
+- **Tests:** `AmendFlowTest` (keine neue Order, Snapshot-Hash unverändert, additiv, idempotent, Re-Proof) + `CapacityTest` (planned_min, Wochenaggregation) → **135 Tests grün**, `composer audit` sauber
+- **Verifiziert:** Admin-Seiten Kapazität/Produktion/Angebote 200
+- **Manuell (nicht automatisierbar):** Vertretungstest (zweiter Gründer führt Szenario 2 inkl. Nachtrag nach RUNBOOK.md durch) – Abnahmeschritt beim Deployment

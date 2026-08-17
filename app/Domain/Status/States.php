@@ -50,7 +50,7 @@ final class States
             'PROOF_SENT'        => ['CHANGES_REQUESTED', 'APPROVED'],
             'CHANGES_REQUESTED' => ['PROOF_SENT'],
             'APPROVED'          => ['LOCKED'],
-            'LOCKED'            => [],
+            'LOCKED'            => ['MISSING'], // Nachtrag mit konfigurierter Position ⇒ neuer Proof-Zyklus (§7)
         ],
         'production' => [
             ''             => ['BLOCKED'],

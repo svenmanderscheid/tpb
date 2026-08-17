@@ -40,16 +40,30 @@ final class QuoteService
      *
      * @return array{id:int,public_id:string}
      */
-    public static function createFromConfiguration(int $configId, ?int $actorUserId): array
+    public static function createFromConfiguration(int $configId, ?int $actorUserId, ?int $amendsOrderId = null): array
     {
         $cfg = Db::run('SELECT id, public_id, customer_id, status FROM configurations WHERE id = ? LIMIT 1', [$configId])->fetch();
         if ($cfg === false) {
             throw new \InvalidArgumentException('Konfiguration nicht gefunden.');
         }
-        if ($cfg['customer_id'] === null) {
-            throw new \InvalidArgumentException('Zur Konfiguration ist kein Kunde hinterlegt.');
+
+        // Nachtragsangebot (§7): Kunde stammt aus der referenzierten Order, Preisbuch bleibt das aktuelle.
+        if ($amendsOrderId !== null) {
+            $order = Db::run('SELECT customer_id, cancelled_at, completed_at FROM orders WHERE id = ? LIMIT 1', [$amendsOrderId])->fetch();
+            if ($order === false) {
+                throw new \InvalidArgumentException('Referenzierter Auftrag nicht gefunden.');
+            }
+            if ($order['cancelled_at'] !== null || $order['completed_at'] !== null) {
+                throw new \InvalidArgumentException('Nachträge sind nur zu aktiven Aufträgen möglich.');
+            }
+            $customer = CustomerRepo::findById((int) $order['customer_id']);
+            Db::run('UPDATE configurations SET customer_id = ? WHERE id = ?', [(int) $order['customer_id'], $configId]);
+        } else {
+            if ($cfg['customer_id'] === null) {
+                throw new \InvalidArgumentException('Zur Konfiguration ist kein Kunde hinterlegt.');
+            }
+            $customer = CustomerRepo::findById((int) $cfg['customer_id']);
         }
-        $customer = CustomerRepo::findById((int) $cfg['customer_id']);
         if ($customer === null) {
             throw new \InvalidArgumentException('Kunde nicht gefunden.');
         }
@@ -75,7 +89,7 @@ final class QuoteService
 
         $validUntil = Clock::nowUtc()->modify('+' . self::expiryDays() . ' days')->format('Y-m-d');
 
-        return Db::tx(function () use ($configId, $cfg, $customer, $breakdown, $snapshot, $snapshotJson, $snapshotHash, $pb, $ids, $engineConfig, $validUntil, $actorUserId): array {
+        return Db::tx(function () use ($configId, $cfg, $customer, $breakdown, $snapshot, $snapshotJson, $snapshotHash, $pb, $ids, $engineConfig, $validUntil, $actorUserId, $amendsOrderId): array {
             $now = Clock::nowUtcSeconds();
 
             // Frische Berechnung persistieren (Nachvollziehbarkeit, §6).
@@ -88,11 +102,11 @@ final class QuoteService
             $publicId = Ulid::generate();
             Db::run(
                 'INSERT INTO quotes
-                    (public_id, quote_number, customer_id, configuration_id, status, currency,
+                    (public_id, quote_number, customer_id, configuration_id, amends_order_id, status, currency,
                      total_cents, valid_until, snapshot_json, snapshot_sha256, created_by, created_at, updated_at)
-                 VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                 VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                 [
-                    $publicId, (int) $customer['id'], $configId, 'DRAFT', $pb->currency,
+                    $publicId, (int) $customer['id'], $configId, $amendsOrderId, 'DRAFT', $pb->currency,
                     $breakdown->totalCents, $validUntil, $snapshotJson, $snapshotHash, $actorUserId, $now, $now,
                 ]
             );
@@ -206,9 +220,11 @@ final class QuoteService
                 throw new QuoteAccessException('Der Angebotslink ist ungültig, abgelaufen oder widerrufen.');
             }
 
-            // Idempotenz: bereits angenommen → bestehende Order zurückgeben.
+            $amendsOrderId = $quote['amends_order_id'] !== null ? (int) $quote['amends_order_id'] : null;
+
+            // Idempotenz: bereits angenommen → bestehende (bzw. referenzierte) Order zurückgeben.
             if ((string) $quote['status'] === 'ACCEPTED') {
-                $order = OrderRepo::findByQuoteId($quoteId);
+                $order = $amendsOrderId !== null ? OrderRepo::findById($amendsOrderId) : OrderRepo::findByQuoteId($quoteId);
                 if ($order !== null) {
                     return [
                         'result' => 'ok', 'order_id' => (int) $order['id'], 'order_public_id' => (string) $order['public_id'],
@@ -227,6 +243,19 @@ final class QuoteService
             }
 
             $snapshot = json_decode((string) $quote['snapshot_json'], true, 512, JSON_THROW_ON_ERROR);
+
+            // Nachtragsannahme (§7): keine neue Order, Positionen an die referenzierte Order anhängen.
+            if ($amendsOrderId !== null) {
+                $order = OrderRepo::appendFromSnapshot($amendsOrderId, $snapshot, null);
+                Db::run("UPDATE quotes SET status = 'ACCEPTED', accepted_at = ?, updated_at = ? WHERE id = ?", [Clock::nowUtcSeconds(), Clock::nowUtcSeconds(), $quoteId]);
+                Status::transition('quote', $quoteId, 'quote', 'SENT', 'ACCEPTED', ['actor_label' => 'customer']);
+                Audit::log('quote', $quotePublicId, 'quote.amend_accepted', ['actor_label' => 'customer', 'from_state' => 'SENT', 'to_state' => 'ACCEPTED', 'metadata' => ['order_number' => $order['order_number']]]);
+                return [
+                    'result' => 'ok', 'order_id' => (int) $order['id'], 'order_public_id' => (string) $order['public_id'],
+                    'order_number' => (string) $order['order_number'], 'already' => false,
+                ];
+            }
+
             $order = OrderRepo::createFromQuote($quote, $snapshot, null);
 
             // Rechtserklärungen zum Zeitpunkt der Annahme festhalten (order_terms_acceptance).

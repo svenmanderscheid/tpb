@@ -25,6 +25,75 @@ final class OrderRepo
     }
 
     /** @return array<string,mixed>|null */
+    public static function findById(int $id): ?array
+    {
+        $row = Db::run('SELECT * FROM orders WHERE id = ? LIMIT 1', [$id])->fetch();
+        return $row === false ? null : $row;
+    }
+
+    /**
+     * Hängt Positionen eines Nachtrags-Snapshots an einen bestehenden Auftrag an (§7):
+     * neue order_items (+Units), Gesamtsumme additiv, keine neue Order. Setzt bei
+     * konfiguriertem Nachtrag ein gesperrtes Artwork zurück (neuer Proof-Zyklus).
+     * MUSS innerhalb der Annahme-Transaktion laufen. Gibt die Auftragszeile.
+     *
+     * @param array<string,mixed> $snapshot
+     * @return array<string,mixed>
+     */
+    public static function appendFromSnapshot(int $orderId, array $snapshot, ?int $actorUserId): array
+    {
+        $order = self::findById($orderId);
+        if ($order === null) {
+            throw new \InvalidArgumentException('Auftrag nicht gefunden.');
+        }
+        $now = Clock::nowUtcSeconds();
+        $pos = (int) Db::run('SELECT COALESCE(MAX(pos_no), 0) FROM order_items WHERE order_id = ?', [$orderId])->fetchColumn();
+
+        $hasConfigured = false;
+        foreach ($snapshot['items'] ?? [] as $it) {
+            $pos++;
+            if (($it['type'] ?? 'configured') === 'configured') {
+                $hasConfigured = true;
+            }
+            Db::run(
+                'INSERT INTO order_items
+                    (order_id, pos_no, product_id, sku, description, qty, unit_cents, line_cents, config_snapshot_json, created_at, updated_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                [
+                    $orderId, $pos, (int) $it['product_id'], $it['sku'] ?? null, (string) $it['description'],
+                    (int) $it['qty'], (int) $it['unit_cents'], (int) $it['line_cents'],
+                    isset($it['config']) ? Canonical::json($it['config']) : null, $now, $now,
+                ]
+            );
+            $orderItemId = (int) Db::pdo()->lastInsertId();
+            $unitNo = 0;
+            foreach ($it['units'] ?? [] as $u) {
+                $unitNo++;
+                Db::run(
+                    'INSERT INTO order_item_units (order_item_id, unit_no, variant_sku, name, number, created_at) VALUES (?, ?, ?, ?, ?, ?)',
+                    [$orderItemId, $unitNo, (string) $u['variant_sku'], $u['name'] ?? null, $u['number'] ?? null, $now]
+                );
+            }
+        }
+
+        $addTotal = (int) ($snapshot['totals']['total_cents'] ?? 0);
+        Db::run('UPDATE orders SET total_cents = total_cents + ?, updated_at = ? WHERE id = ?', [$addTotal, $now, $orderId]);
+
+        // Konfigurierter Nachtrag bei bereits gesperrtem Artwork ⇒ neuer Proof-Zyklus (§7).
+        if ($hasConfigured && (string) $order['cur_artwork'] === 'LOCKED') {
+            Status::transition('order', $orderId, 'artwork', 'LOCKED', 'MISSING', ['actor_user_id' => $actorUserId, 'reason' => 'amend_reproof']);
+            Db::run("UPDATE orders SET cur_artwork = 'MISSING', updated_at = ? WHERE id = ?", [$now, $orderId]);
+        }
+
+        Audit::log('order', (string) $order['public_id'], 'order.amended', [
+            'actor_user_id' => $actorUserId,
+            'metadata'      => ['added_total_cents' => $addTotal, 'reproof' => $hasConfigured && (string) $order['cur_artwork'] === 'LOCKED'],
+        ]);
+
+        return self::findById($orderId) ?? $order;
+    }
+
+    /** @return array<string,mixed>|null */
     public static function findByPublicId(string $publicId): ?array
     {
         $row = Db::run('SELECT * FROM orders WHERE public_id = ? LIMIT 1', [$publicId])->fetch();

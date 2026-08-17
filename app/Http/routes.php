@@ -124,6 +124,7 @@ return [
     ['POST', '/admin/anfragen/{publicId}/angebot',       [QuoteController::class, 'createQuote'], ['auth:tpb_manage_quotes', 'csrf']],
     ['GET',  '/admin/angebot/{publicId}',                [QuoteController::class, 'show'],        ['auth:tpb_manage_quotes']],
     ['POST', '/admin/angebot/{publicId}/versenden',      [QuoteController::class, 'send'],        ['auth:tpb_manage_quotes', 'csrf']],
+    ['POST', '/admin/auftrag/{publicId}/nachtrag',       [QuoteController::class, 'createAmend'], ['auth:tpb_manage_quotes', 'csrf']],
 
     // Aufträge & Proof (M4) – Rechte: tpb_manage_artwork (owner/admin/sales)
     ['GET',  '/admin/auftraege',                         [OrderController::class, 'index'],         ['auth:tpb_manage_artwork']],
@@ -133,6 +134,8 @@ return [
 
     // Produktion & Etikett (M5) – Rechte: tpb_manage_production (owner/admin/production)
     ['GET',  '/admin/produktion',                        [ProductionController::class, 'queue'],         ['auth:tpb_manage_production']],
+    ['GET',  '/admin/kapazitaet',                        [ProductionController::class, 'capacity'],      ['auth:tpb_manage_production']],
+    ['POST', '/admin/job/{publicId}/termin',             [ProductionController::class, 'dueDate'],        ['auth:tpb_manage_production', 'csrf']],
     ['POST', '/admin/auftrag/{publicId}/produktion',     [ProductionController::class, 'createForOrder'], ['auth:tpb_manage_production', 'csrf']],
     ['GET',  '/admin/job/{publicId}',                    [ProductionController::class, 'job'],            ['auth:tpb_manage_production']],
     ['POST', '/admin/job/{publicId}/freigeben',          [ProductionController::class, 'release'],        ['auth:tpb_manage_production', 'csrf']],

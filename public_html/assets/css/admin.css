@@ -174,3 +174,8 @@ input.over { border-color: var(--danger) !important; }
 .backup-codes { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.5rem; }
 .backup-codes li { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 0.5rem 0.75rem; text-align: center; letter-spacing: 0.08em; }
 .topbar .user { margin-left: 0.75rem; }
+
+/* Kapazitätsampel (M9) */
+.status-badge.cap-green { color: #9be7a6; border-color: #2f5f38; }
+.status-badge.cap-yellow { color: #ffcf70; border-color: #6b571f; }
+.status-badge.cap-red { color: #ffb4ae; border-color: #6b2f2f; }

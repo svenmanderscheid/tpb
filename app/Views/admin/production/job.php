@@ -74,6 +74,17 @@ $pid = (string) $job['public_id'];
 
     <aside>
         <div class="card">
+            <h2>Termin &amp; Kapazität</h2>
+            <p class="muted">Geplant: <?= $job['planned_min'] !== null ? (int) $job['planned_min'] . ' min' : '– (kein Satz)' ?></p>
+            <form method="post" action="/admin/job/<?= e($pid) ?>/termin">
+                <?= Csrf::field() ?>
+                <div class="field"><label for="due_date">Fälligkeitstermin</label><input type="date" id="due_date" name="due_date" value="<?= e((string) ($job['due_date'] ?? '')) ?>"></div>
+                <button type="submit" class="btn secondary">Termin setzen</button>
+            </form>
+            <p class="muted mt"><a href="/admin/kapazitaet">Wochenkapazität ansehen →</a></p>
+        </div>
+
+        <div class="card">
             <h2>Etikett</h2>
             <form method="post" action="/admin/job/<?= e($pid) ?>/etikett"><?= Csrf::field() ?><button class="btn" type="submit">Etikett rendern</button></form>
             <?php if ($last_print !== null): ?>

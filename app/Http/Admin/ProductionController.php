@@ -51,6 +51,27 @@ final class ProductionController
         Response::redirect('/admin/auftrag/' . $order['public_id']);
     }
 
+    /** Kapazitäts-Wochenansicht (M9). @param array<string,string> $params */
+    public function capacity(array $params): void
+    {
+        Response::html(View::render('admin/production/capacity', [
+            'title'    => 'Kapazität',
+            'nav'      => 'capacity',
+            'weeks'    => \Tpb\Domain\Report\CapacityReport::weeks(),
+            'capacity' => \Tpb\Domain\Report\CapacityReport::capacityMinutes(),
+            'flash'    => $this->takeFlash(),
+        ]));
+    }
+
+    /** @param array<string,string> $params */
+    public function dueDate(array $params): void
+    {
+        $job = $this->requireJob($params['publicId'] ?? '');
+        ProductionService::setDueDate((string) $job['public_id'], trim((string) Request::post('due_date', '')) ?: null, Auth::id());
+        $this->flash('ok', 'Termin gesetzt.');
+        Response::redirect('/admin/job/' . $job['public_id']);
+    }
+
     /** @param array<string,string> $params */
     public function job(array $params): void
     {

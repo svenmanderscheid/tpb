@@ -27,6 +27,8 @@ Stand: M7. Dieses Runbook wird bis zum Go-live vervollständigt.
 - **Zahlungseingang fehlt (Shop)?** `payment_webhook_events` prüfen (Signatur gültig? `process_status`); `payment_intents` Status; Order-Achse in `status_events`.
 - **Bestand falsch?** `/admin/lager` (Bewegungen in `stock_movements`); Reservierungen in `stock_reservations`.
 - **Backup zurückspielen:** `gzip -dc <dump>.sql.gz | mysql -u <user> <db>` (Details in DEPLOY.md).
+- **Nachtrag zu einem Auftrag (M9):** Zusatzpositionen im Konfigurator als Entwurf speichern → Auftrag öffnen → „Nachtragsangebot erstellen" (Entwurfs-ID eintragen) → prüfen/versenden → Kundenannahme hängt die Positionen an denselben Auftrag an (keine neue Order); bei konfiguriertem Nachtrag ist ein neuer Proof nötig. Abrechnung über die nächste Rechnung.
+- **Kapazität (M9):** Fälligkeitstermin je Job in der Job-Ansicht setzen; `/admin/kapazitaet` zeigt je Woche die geplante Auslastung gegen `capacity.week_minutes` (Ampel, kein Auto-Block).
 
 ## Incidents (Grundregeln)
 

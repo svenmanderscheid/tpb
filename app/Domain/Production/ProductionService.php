@@ -24,6 +24,16 @@ final class ProductionService
         'scrap'  => ['IN_PROGRESS', 'SCRAPPED', 'scrap'],
     ];
 
+    /** Setzt den Fälligkeitstermin eines Jobs (Kapazitätsplanung, M9). */
+    public static function setDueDate(string $jobPublicId, ?string $dueDate, ?int $actorUserId): void
+    {
+        $due = $dueDate !== null && preg_match('/^\d{4}-\d{2}-\d{2}$/', $dueDate) ? $dueDate : null;
+        $n = Db::run('UPDATE production_jobs SET due_date = ?, updated_at = ? WHERE public_id = ?', [$due, Clock::nowUtcSeconds(), $jobPublicId])->rowCount();
+        if ($n > 0) {
+            Audit::log('production_job', $jobPublicId, 'production.due_date_set', ['actor_user_id' => $actorUserId, 'metadata' => ['due_date' => $due]]);
+        }
+    }
+
     /** Legt Jobs für einen Auftrag an (Order muss aktiv/CONFIRMED sein). */
     public static function createJobs(int $orderId, ?int $actorUserId): array
     {
